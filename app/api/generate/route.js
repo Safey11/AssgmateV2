@@ -1,0 +1,84 @@
+import { NextResponse } from "next/server";
+import { generateContent } from "@/lib/ai";
+import { generateWord } from "@/lib/fileGenerators/word";
+import { generateExcel } from "@/lib/fileGenerators/excel";
+import { generatePPTX } from "@/lib/fileGenerators/pptx";
+import { generatePDF } from "@/lib/fileGenerators/pdf";
+import { connectDB } from "@/lib/mongodb";
+import Assignment from "@/models/Assignment";
+import User from "@/models/User";
+import { auth } from "@/auth";
+
+const MIME_TYPES = {
+  word: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  excel: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  pdf: "application/pdf",
+};
+
+const FREE_LIMIT = 5;
+
+export async function POST(req) {
+  try {
+    const session = await auth();
+    const { question, format, title } = await req.json();
+
+    if (!question || !format) {
+      return NextResponse.json({ error: "Question and format are required" }, { status: 400 });
+    }
+
+    await connectDB();
+
+    // Check plan limit
+    if (session?.user?.email) {
+      const user = await User.findOne({ email: session.user.email });
+      if (user && user.plan === "free" && user.generationsUsed >= FREE_LIMIT) {
+        return NextResponse.json(
+          { error: "Free plan limit reached. Please upgrade to Pro for unlimited generations." },
+          { status: 403 }
+        );
+      }
+    }
+
+    const prompt = `You are an expert academic assistant. Complete the following assignment thoroughly and professionally.
+
+Assignment: ${question}
+
+Provide a well-structured, detailed response with proper headings, explanations, and examples where needed. Format using markdown with # for main headings and ## for subheadings.`;
+
+    const content = await generateContent(prompt);
+
+    let buffer;
+    const fileTitle = title || "Assignment";
+
+    if (format === "word") buffer = await generateWord(content, fileTitle);
+    else if (format === "excel") buffer = await generateExcel(content, fileTitle);
+    else if (format === "pptx") buffer = await generatePPTX(content, fileTitle);
+    else buffer = await generatePDF(content, fileTitle);
+
+    // Save to MongoDB and increment count
+    if (session?.user?.email) {
+      const user = await User.findOne({ email: session.user.email });
+      if (user) {
+        await Assignment.create({
+          userId: user._id,
+          title: fileTitle,
+          question,
+          format,
+          content,
+        });
+        await User.findByIdAndUpdate(user._id, { $inc: { generationsUsed: 1 } });
+      }
+    }
+
+    return new NextResponse(buffer, {
+      headers: {
+        "Content-Type": MIME_TYPES[format],
+        "Content-Disposition": `attachment; filename="${fileTitle}.${format === "word" ? "docx" : format}"`,
+      },
+    });
+  } catch (error) {
+    console.error("Generate error:", error);
+    return NextResponse.json({ error: "Generation failed" }, { status: 500 });
+  }
+}
