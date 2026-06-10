@@ -16,29 +16,29 @@ export default function LoginPage() {
   }
 
   async function handleSubmit() {
-    setError(null);
-    if (!form.email || !form.password) return setError("All fields required");
+  setError(null);
+  if (!form.email || !form.password) return setError("All fields required");
 
-    setLoading(true);
-    try {
-      const res = await signIn("credentials", {
-        email: form.email,
-        password: form.password,
-        redirect: false,
-      });
+  setLoading(true);
+  try {
+    const res = await signIn("credentials", {
+      email: form.email,
+      password: form.password,
+      redirect: false,
+    });
 
-      if (!res || res.error) {
-        setError("Invalid email or password");
-        return;
-      }
-
-      router.push("/dashboard");
-    } catch (err) {
-      setError("Something went wrong");
-    } finally {
-      setLoading(false);
+    if (!res || res.error) {
+      setError("Invalid email or password");
+      return;
     }
+
+    window.location.href = "/dashboard";
+  } catch (err) {
+    setError("Something went wrong");
+  } finally {
+    setLoading(false);
   }
+}
 
   return (
     <main className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center px-4">
