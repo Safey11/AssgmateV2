@@ -12,3 +12,4 @@ Creating turbopack project {
   testMode: true
 }
 
+ GET /health 404 in 1435ms (next.js: 432ms, proxy.ts: 393ms, application-code: 611ms)
