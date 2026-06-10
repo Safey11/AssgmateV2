@@ -1,0 +1,15 @@
+
+> assignmate@0.1.0 dev
+> next dev
+
+▲ Next.js 16.2.7 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.0.124:3000
+- Environments: .env.local
+✓ Ready in 383ms
+Creating turbopack project {
+  dir: '/home/saif/Desktop/projects/SubmitAI/Submit-AI/assignmate',
+  testMode: true
+}
+
+ GET /health 404 in 939ms (next.js: 276ms, application-code: 663ms)
