@@ -2,14 +2,13 @@
 > assignmate@0.1.0 dev
 > next dev
 
-⨯ Failed to start server
-Error: listen EADDRINUSE: address already in use :::3000
-    at <unknown> (Error: listen EADDRINUSE: address already in use :::3000)
-    at new Promise (<anonymous>) {
-  code: 'EADDRINUSE',
-  errno: -98,
-  syscall: 'listen',
-  address: '::',
-  port: 3000
+▲ Next.js 16.2.7 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.0.124:3000
+- Environments: .env.local
+✓ Ready in 551ms
+Creating turbopack project {
+  dir: '/home/saif/Desktop/projects/SubmitAI/Submit-AI/assignmate',
+  testMode: true
 }
-[?25h
+
