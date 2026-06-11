@@ -8,6 +8,7 @@ export default function LandingPage() {
       <nav className="flex items-center justify-between px-8 py-5 border-b border-white/10">
         <span className="text-xl font-bold tracking-tight">Assign<span className="text-violet-400">Mate</span></span>
         <div className="flex items-center gap-4">
+          <Link href="/about" className="text-sm text-white/60 hover:text-white transition">About</Link>
           <Link href="/pricing" className="text-sm text-white/60 hover:text-white transition">Pricing</Link>
           <Link href="/login" className="text-sm bg-violet-600 hover:bg-violet-500 px-4 py-2 rounded-lg transition">Login</Link>
         </div>
@@ -84,7 +85,13 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="border-t border-white/10 px-8 py-6 text-center text-white/30 text-sm">
-        © 2025 AssignMate. Built for students, by a student.
+        <div className="flex items-center justify-center gap-6 mb-3">
+          <Link href="/about" className="hover:text-white transition">About</Link>
+          <Link href="/pricing" className="hover:text-white transition">Pricing</Link>
+          <Link href="/privacy" className="hover:text-white transition">Privacy Policy</Link>
+          <Link href="/terms" className="hover:text-white transition">Terms of Service</Link>
+        </div>
+        <p>© 2025 AssignMate. Built for students, by a student.</p>
       </footer>
 
     </main>

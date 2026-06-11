@@ -16,29 +16,29 @@ export default function LoginPage() {
   }
 
   async function handleSubmit() {
-  setError(null);
-  if (!form.email || !form.password) return setError("All fields required");
+    setError(null);
+    if (!form.email || !form.password) return setError("All fields required");
 
-  setLoading(true);
-  try {
-    const res = await signIn("credentials", {
-      email: form.email,
-      password: form.password,
-      redirect: false,
-    });
+    setLoading(true);
+    try {
+      const res = await signIn("credentials", {
+        email: form.email,
+        password: form.password,
+        redirect: false,
+      });
 
-    if (!res || res.error) {
-      setError("Invalid email or password");
-      return;
+      if (!res || res.error) {
+        setError("Invalid email or password");
+        return;
+      }
+
+      window.location.href = "/dashboard";
+    } catch (err) {
+      setError("Something went wrong");
+    } finally {
+      setLoading(false);
     }
-
-    window.location.href = "/dashboard";
-  } catch (err) {
-    setError("Something went wrong");
-  } finally {
-    setLoading(false);
   }
-}
 
   return (
     <main className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center px-4">
@@ -91,10 +91,15 @@ export default function LoginPage() {
             </button>
           </div>
 
-          <p className="text-center text-white/40 text-sm mt-6">
-            Don't have an account?{" "}
-            <Link href="/register" className="text-violet-400 hover:underline">Register</Link>
-          </p>
+          <div className="flex flex-col gap-2 mt-6">
+            <p className="text-center text-white/40 text-sm">
+              <Link href="/forgot-password" className="text-violet-400 hover:underline">Forgot password?</Link>
+            </p>
+            <p className="text-center text-white/40 text-sm">
+              Don't have an account?{" "}
+              <Link href="/register" className="text-violet-400 hover:underline">Register</Link>
+            </p>
+          </div>
         </div>
 
       </div>
