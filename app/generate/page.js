@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 
 const FORMATS = [
@@ -10,6 +10,8 @@ const FORMATS = [
   { id: "pptx", label: "PowerPoint", icon: "📽️", ext: ".pptx" },
 ];
 
+const FREE_LIMIT = 5;
+
 export default function GeneratePage() {
   const [question, setQuestion] = useState("");
   const [title, setTitle] = useState("");
@@ -18,25 +20,26 @@ export default function GeneratePage() {
   const [error, setError] = useState(null);
   const [uploadingPdf, setUploadingPdf] = useState(false);
   const [pdfName, setPdfName] = useState(null);
+  const [user, setUser] = useState(null);
   const fileRef = useRef(null);
+
+  useEffect(() => {
+    fetch("/api/user/me").then((r) => r.json()).then(setUser);
+  }, []);
+
+  const isFreePlan = user?.plan === "free";
+  const generationsLeft = isFreePlan ? FREE_LIMIT - (user?.generationsUsed || 0) : null;
 
   async function handlePdfUpload(e) {
     const file = e.target.files[0];
     if (!file || file.type !== "application/pdf") return;
-
     setPdfName(file.name);
     setUploadingPdf(true);
     setError(null);
-
     try {
       const formData = new FormData();
       formData.append("pdf", file);
-
-      const res = await fetch("/api/parse-pdf", {
-        method: "POST",
-        body: formData,
-      });
-
+      const res = await fetch("/api/parse-pdf", { method: "POST", body: formData });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to parse PDF");
       setQuestion(data.text);
@@ -74,6 +77,9 @@ export default function GeneratePage() {
       a.download = `${title || "assignment"}.${format === "word" ? "docx" : format}`;
       a.click();
       window.URL.revokeObjectURL(url);
+
+      // Refresh user data after generation
+      fetch("/api/user/me").then((r) => r.json()).then(setUser);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -95,9 +101,41 @@ export default function GeneratePage() {
 
       <div className="max-w-3xl mx-auto px-6 py-12">
 
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold">Generate Assignment ✨</h1>
-          <p className="text-white/40 mt-2">Paste your question, pick a format, download your file.</p>
+        <div className="flex items-start justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold">Generate Assignment ✨</h1>
+            <p className="text-white/40 mt-2">Paste your question, pick a format, download your file.</p>
+          </div>
+
+          {/* Generations Counter */}
+          {user && (
+            <div className={`text-right shrink-0 px-4 py-3 rounded-xl border ${
+              isFreePlan && generationsLeft <= 1
+                ? "bg-red-500/10 border-red-500/20"
+                : isFreePlan
+                ? "bg-white/5 border-white/10"
+                : "bg-violet-500/10 border-violet-500/20"
+            }`}>
+              {isFreePlan ? (
+                <>
+                  <p className={`text-lg font-bold ${generationsLeft <= 1 ? "text-red-400" : "text-white"}`}>
+                    {generationsLeft} left
+                  </p>
+                  <p className="text-white/40 text-xs">of {FREE_LIMIT} free</p>
+                  {generationsLeft <= 1 && (
+                    <Link href="/pricing" className="text-xs text-violet-400 hover:underline mt-1 block">
+                      Upgrade →
+                    </Link>
+                  )}
+                </>
+              ) : (
+                <>
+                  <p className="text-lg font-bold text-violet-400">∞</p>
+                  <p className="text-white/40 text-xs">Pro Plan</p>
+                </>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="flex flex-col gap-6">
@@ -179,7 +217,7 @@ export default function GeneratePage() {
           {/* Generate Button */}
           <button
             onClick={handleGenerate}
-            disabled={loading || !question.trim()}
+            disabled={loading || !question.trim() || (isFreePlan && generationsLeft <= 0)}
             className="w-full bg-violet-600 hover:bg-violet-500 disabled:opacity-40 disabled:cursor-not-allowed py-4 rounded-xl font-semibold transition text-lg"
           >
             {loading ? "Generating..." : "Generate & Download ✨"}
