@@ -6,18 +6,20 @@ import { useRouter } from "next/navigation";
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [form, setForm] = useState({ name: "", email: "", password: "", confirm: "" });
+  const [form, setForm] = useState({ name: "", email: "", password: "", confirm: "", terms: false });
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
   function handleChange(e) {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const value = e.target.type === "checkbox" ? e.target.checked : e.target.value;
+    setForm({ ...form, [e.target.name]: value });
   }
 
   async function handleSubmit() {
     setError(null);
     if (!form.name || !form.email || !form.password) return setError("All fields required");
     if (form.password !== form.confirm) return setError("Passwords don't match");
+    if (!form.terms) return setError("Please accept the Terms of Service and Privacy Policy");
 
     setLoading(true);
     try {
@@ -92,6 +94,24 @@ export default function RegisterPage() {
                 placeholder="••••••••"
                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm outline-none focus:border-violet-500 transition placeholder:text-white/20"
               />
+            </div>
+
+            {/* Terms Checkbox */}
+            <div className="flex items-start gap-3">
+              <input
+                type="checkbox"
+                id="terms"
+                name="terms"
+                checked={form.terms}
+                onChange={handleChange}
+                className="mt-1 accent-violet-500"
+              />
+              <label htmlFor="terms" className="text-sm text-white/40 leading-relaxed">
+                I agree to the{" "}
+                <a href="/terms" target="_blank" className="text-violet-400 hover:underline">Terms of Service</a>
+                {" "}and{" "}
+                <a href="/privacy" target="_blank" className="text-violet-400 hover:underline">Privacy Policy</a>
+              </label>
             </div>
 
             {error && (
