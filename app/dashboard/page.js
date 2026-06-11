@@ -20,10 +20,14 @@ export default function DashboardPage() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const res = await fetch("/api/history");
-        const data = await res.json();
-        setStats({ generated: data.length, plan: "Free" });
-        setRecent(data.slice(0, 3));
+        const [historyRes, userRes] = await Promise.all([
+          fetch("/api/history"),
+          fetch("/api/user/me"),
+        ]);
+        const history = await historyRes.json();
+        const user = await userRes.json();
+        setStats({ generated: history.length, plan: user.plan || "Free" });
+        setRecent(history.slice(0, 3));
       } catch (err) {
         console.error(err);
       } finally {
@@ -44,7 +48,10 @@ export default function DashboardPage() {
           <Link href="/history" className="text-sm text-white/60 hover:text-white transition">History</Link>
           <Link href="/pricing" className="text-sm text-white/60 hover:text-white transition">Pricing</Link>
           <button
-            onClick={() => signOut({ callbackUrl: "/login" })}
+            onClick={async () => {
+              await signOut({ redirect: false });
+              window.location.href = "/login";
+            }}
             className="text-sm bg-white/5 border border-white/10 hover:border-white/30 px-4 py-2 rounded-lg transition"
           >
             Logout
@@ -67,11 +74,15 @@ export default function DashboardPage() {
           {[
             { label: "Assignments Generated", value: loading ? "..." : stats.generated, icon: "📝" },
             { label: "Files Downloaded", value: loading ? "..." : stats.generated, icon: "📥" },
-            { label: "Plan", value: stats.plan, icon: "⚡" },
+            { label: "Plan", value: loading ? "..." : stats.plan.charAt(0).toUpperCase() + stats.plan.slice(1), icon: "⚡" },
           ].map((stat) => (
-            <div key={stat.label} className="bg-white/5 border border-white/10 rounded-2xl p-6">
+            <div key={stat.label} className={`bg-white/5 border rounded-2xl p-6 ${stat.label === "Plan" && stats.plan === "pro"
+                ? "border-violet-500/40 bg-violet-600/10"
+                : "border-white/10"
+              }`}>
               <span className="text-2xl">{stat.icon}</span>
-              <p className="text-3xl font-bold mt-3">{stat.value}</p>
+              <p className={`text-3xl font-bold mt-3 ${stat.label === "Plan" && stats.plan === "pro" ? "text-violet-400" : ""
+                }`}>{stat.value}</p>
               <p className="text-white/40 text-sm mt-1">{stat.label}</p>
             </div>
           ))}
