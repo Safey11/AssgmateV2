@@ -188,7 +188,7 @@ export default function HistoryPage() {
           <select
             value={filterFormat}
             onChange={(e) => setFilterFormat(e.target.value)}
-            className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm outline-none focus:border-violet-500 transition text-white"
+            className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm outline-none focus:border-violet-500 transition text-white [&>option]:bg-[#111] [&>option]:text-white"
           >
             <option value="all">All Formats</option>
             {FORMATS.map((f) => (
@@ -198,7 +198,7 @@ export default function HistoryPage() {
           <select
             value={sortOrder}
             onChange={(e) => setSortOrder(e.target.value)}
-            className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm outline-none focus:border-violet-500 transition text-white"
+            className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm outline-none focus:border-violet-500 transition text-white [&>option]:bg-[#111] [&>option]:text-white"
           >
             <option value="newest">Newest First</option>
             <option value="oldest">Oldest First</option>
@@ -295,11 +295,10 @@ export default function HistoryPage() {
                     <button
                       key={f}
                       onClick={() => setSelectedFormat(f)}
-                      className={`py-2 rounded-xl text-sm border transition ${
-                        (selectedFormat || selected.format) === f
-                          ? "border-violet-500 bg-violet-500/10 text-white"
-                          : "border-white/10 bg-white/5 text-white/50 hover:border-white/30"
-                      }`}
+                      className={`py-2 rounded-xl text-sm border transition ${(selectedFormat || selected.format) === f
+                        ? "border-violet-500 bg-violet-500/10 text-white"
+                        : "border-white/10 bg-white/5 text-white/50 hover:border-white/30"
+                        }`}
                     >
                       {FORMAT_ICONS[f]} {f.toUpperCase()}
                     </button>
