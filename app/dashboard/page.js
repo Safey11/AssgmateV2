@@ -47,6 +47,7 @@ export default function DashboardPage() {
           <Link href="/generate" className="text-sm text-white/60 hover:text-white transition">Generate</Link>
           <Link href="/history" className="text-sm text-white/60 hover:text-white transition">History</Link>
           <Link href="/pricing" className="text-sm text-white/60 hover:text-white transition">Pricing</Link>
+          <Link href="/settings" className="text-sm text-white/60 hover:text-white transition">Settings</Link>
           <button
             onClick={async () => {
               await signOut({ redirect: false });
