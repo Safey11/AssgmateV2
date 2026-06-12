@@ -9,6 +9,7 @@ export default function DashboardPage() {
   const [stats, setStats] = useState({ generated: 0, plan: "Free" });
   const [recent, setRecent] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const FORMAT_ICONS = {
     word: "📝",
@@ -41,56 +42,80 @@ export default function DashboardPage() {
     <main className="min-h-screen bg-[#0a0a0a] text-white">
 
       {/* Navbar */}
-      <nav className="flex items-center justify-between px-8 py-5 border-b border-white/10">
+      <nav className="flex items-center justify-between px-6 py-5 border-b border-white/10 relative">
         <span className="text-xl font-bold tracking-tight">Assign<span className="text-violet-400">Mate</span></span>
-        <div className="flex items-center gap-6">
+
+        {/* Desktop Nav */}
+        <div className="hidden md:flex items-center gap-6">
           <Link href="/generate" className="text-sm text-white/60 hover:text-white transition">Generate</Link>
           <Link href="/history" className="text-sm text-white/60 hover:text-white transition">History</Link>
           <Link href="/pricing" className="text-sm text-white/60 hover:text-white transition">Pricing</Link>
           <Link href="/settings" className="text-sm text-white/60 hover:text-white transition">Settings</Link>
           <button
-            onClick={async () => {
-              await signOut({ redirect: false });
-              window.location.href = "/login";
-            }}
+            onClick={async () => { await signOut({ redirect: false }); window.location.href = "/login"; }}
             className="text-sm bg-white/5 border border-white/10 hover:border-white/30 px-4 py-2 rounded-lg transition"
           >
             Logout
           </button>
         </div>
+
+        {/* Mobile Hamburger */}
+        <button onClick={() => setMenuOpen(!menuOpen)} className="md:hidden flex flex-col gap-1.5 p-2">
+          <span className={`block w-6 h-0.5 bg-white transition-all ${menuOpen ? "rotate-45 translate-y-2" : ""}`} />
+          <span className={`block w-6 h-0.5 bg-white transition-all ${menuOpen ? "opacity-0" : ""}`} />
+          <span className={`block w-6 h-0.5 bg-white transition-all ${menuOpen ? "-rotate-45 -translate-y-2" : ""}`} />
+        </button>
+
+        {/* Mobile Menu */}
+        {menuOpen && (
+          <div className="absolute top-full left-0 right-0 bg-[#111] border-b border-white/10 flex flex-col px-6 py-4 gap-4 md:hidden z-50">
+            <Link href="/generate" onClick={() => setMenuOpen(false)} className="text-sm text-white/60 hover:text-white transition">Generate</Link>
+            <Link href="/history" onClick={() => setMenuOpen(false)} className="text-sm text-white/60 hover:text-white transition">History</Link>
+            <Link href="/pricing" onClick={() => setMenuOpen(false)} className="text-sm text-white/60 hover:text-white transition">Pricing</Link>
+            <Link href="/settings" onClick={() => setMenuOpen(false)} className="text-sm text-white/60 hover:text-white transition">Settings</Link>
+            <button
+              onClick={async () => { await signOut({ redirect: false }); window.location.href = "/login"; }}
+              className="text-sm bg-white/5 border border-white/10 px-4 py-2 rounded-lg transition text-left"
+            >
+              Logout
+            </button>
+          </div>
+        )}
       </nav>
 
-      <div className="max-w-5xl mx-auto px-6 py-12">
+      <div className="max-w-5xl mx-auto px-4 md:px-6 py-8 md:py-12">
 
         {/* Welcome */}
-        <div className="mb-10">
-          <h1 className="text-3xl font-bold">
+        <div className="mb-8">
+          <h1 className="text-2xl md:text-3xl font-bold">
             Welcome back {session?.user?.name ? `, ${session.user.name.split(" ")[0]}` : ""} 👋
           </h1>
           <p className="text-white/40 mt-2">What do you need to get done today?</p>
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+        <div className="grid grid-cols-3 gap-3 md:gap-4 mb-8">
           {[
             { label: "Assignments Generated", value: loading ? "..." : stats.generated, icon: "📝" },
             { label: "Files Downloaded", value: loading ? "..." : stats.generated, icon: "📥" },
             { label: "Plan", value: loading ? "..." : stats.plan.charAt(0).toUpperCase() + stats.plan.slice(1), icon: "⚡" },
           ].map((stat) => (
-            <div key={stat.label} className={`bg-white/5 border rounded-2xl p-6 ${stat.label === "Plan" && stats.plan === "pro"
+            <div key={stat.label} className={`bg-white/5 border rounded-2xl p-4 md:p-6 ${
+              stat.label === "Plan" && stats.plan === "pro"
                 ? "border-violet-500/40 bg-violet-600/10"
                 : "border-white/10"
-              }`}>
-              <span className="text-2xl">{stat.icon}</span>
-              <p className={`text-3xl font-bold mt-3 ${stat.label === "Plan" && stats.plan === "pro" ? "text-violet-400" : ""
-                }`}>{stat.value}</p>
-              <p className="text-white/40 text-sm mt-1">{stat.label}</p>
+            }`}>
+              <span className="text-xl md:text-2xl">{stat.icon}</span>
+              <p className={`text-xl md:text-3xl font-bold mt-2 md:mt-3 ${
+                stat.label === "Plan" && stats.plan === "pro" ? "text-violet-400" : ""
+              }`}>{stat.value}</p>
+              <p className="text-white/40 text-xs md:text-sm mt-1">{stat.label}</p>
             </div>
           ))}
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
           <Link href="/generate" className="bg-violet-600/10 border border-violet-500/20 hover:border-violet-500/50 rounded-2xl p-6 transition group">
             <span className="text-3xl">✨</span>
             <h3 className="text-lg font-semibold mt-3 group-hover:text-violet-400 transition">Generate Assignment</h3>
@@ -104,7 +129,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Recent */}
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-4 md:p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold">Recent Assignments</h2>
             <Link href="/history" className="text-violet-400 text-sm hover:underline">View all →</Link>
@@ -129,15 +154,15 @@ export default function DashboardPage() {
           ) : (
             <div className="flex flex-col gap-3">
               {recent.map((a) => (
-                <div key={a._id} className="flex items-center justify-between bg-white/5 rounded-xl p-4">
-                  <div className="flex items-center gap-3">
-                    <span className="text-xl">{FORMAT_ICONS[a.format]}</span>
-                    <div>
-                      <p className="text-sm font-medium">{a.title}</p>
+                <div key={a._id} className="flex items-center justify-between bg-white/5 rounded-xl p-3 md:p-4 gap-2">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="text-xl shrink-0">{FORMAT_ICONS[a.format]}</span>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate">{a.title}</p>
                       <p className="text-white/40 text-xs mt-0.5 line-clamp-1">{a.question}</p>
                     </div>
                   </div>
-                  <span className="text-xs bg-violet-500/10 text-violet-400 border border-violet-500/20 px-2 py-1 rounded-full">
+                  <span className="text-xs bg-violet-500/10 text-violet-400 border border-violet-500/20 px-2 py-1 rounded-full shrink-0">
                     {a.format.toUpperCase()}
                   </span>
                 </div>

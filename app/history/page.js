@@ -28,10 +28,9 @@ export default function HistoryPage() {
   const [saving, setSaving] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState(false);
   const [editedQuestion, setEditedQuestion] = useState("");
+  const [menuOpen, setMenuOpen] = useState(false);
 
-  useEffect(() => {
-    fetchHistory();
-  }, []);
+  useEffect(() => { fetchHistory(); }, []);
 
   useEffect(() => {
     let result = [...assignments];
@@ -113,9 +112,7 @@ export default function HistoryPage() {
         body: JSON.stringify({ content: editedContent }),
       });
       setSelected((prev) => ({ ...prev, content: editedContent }));
-      setAssignments((prev) =>
-        prev.map((a) => a._id === selected._id ? { ...a, content: editedContent } : a)
-      );
+      setAssignments((prev) => prev.map((a) => a._id === selected._id ? { ...a, content: editedContent } : a));
       setEditing(false);
     } catch (err) {
       console.error(err);
@@ -133,9 +130,7 @@ export default function HistoryPage() {
         body: JSON.stringify({ question: editedQuestion }),
       });
       setSelected((prev) => ({ ...prev, question: editedQuestion }));
-      setAssignments((prev) =>
-        prev.map((a) => a._id === selected._id ? { ...a, question: editedQuestion } : a)
-      );
+      setAssignments((prev) => prev.map((a) => a._id === selected._id ? { ...a, question: editedQuestion } : a));
       setEditingQuestion(false);
     } catch (err) {
       console.error(err);
@@ -161,63 +156,82 @@ export default function HistoryPage() {
     <main className="min-h-screen bg-[#0a0a0a] text-white">
 
       {/* Navbar */}
-      <nav className="flex items-center justify-between px-8 py-5 border-b border-white/10">
+      <nav className="flex items-center justify-between px-6 py-5 border-b border-white/10 relative">
         <span className="text-xl font-bold tracking-tight">Assign<span className="text-violet-400">Mate</span></span>
-        <div className="flex items-center gap-6">
+
+        {/* Desktop Nav */}
+        <div className="hidden md:flex items-center gap-6">
           <Link href="/dashboard" className="text-sm text-white/60 hover:text-white transition">Dashboard</Link>
           <Link href="/generate" className="text-sm bg-violet-600 hover:bg-violet-500 px-4 py-2 rounded-lg transition">Generate</Link>
         </div>
+
+        {/* Mobile Hamburger */}
+        <button onClick={() => setMenuOpen(!menuOpen)} className="md:hidden flex flex-col gap-1.5 p-2">
+          <span className={`block w-6 h-0.5 bg-white transition-all ${menuOpen ? "rotate-45 translate-y-2" : ""}`} />
+          <span className={`block w-6 h-0.5 bg-white transition-all ${menuOpen ? "opacity-0" : ""}`} />
+          <span className={`block w-6 h-0.5 bg-white transition-all ${menuOpen ? "-rotate-45 -translate-y-2" : ""}`} />
+        </button>
+
+        {/* Mobile Menu */}
+        {menuOpen && (
+          <div className="absolute top-full left-0 right-0 bg-[#111] border-b border-white/10 flex flex-col px-6 py-4 gap-4 md:hidden z-50">
+            <Link href="/dashboard" onClick={() => setMenuOpen(false)} className="text-sm text-white/60 hover:text-white transition">Dashboard</Link>
+            <Link href="/generate" onClick={() => setMenuOpen(false)} className="text-sm bg-violet-600 px-4 py-2 rounded-lg transition text-center">Generate</Link>
+          </div>
+        )}
       </nav>
 
-      <div className="max-w-4xl mx-auto px-6 py-12">
+      <div className="max-w-4xl mx-auto px-4 md:px-6 py-8 md:py-12">
 
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold">History 🕐</h1>
-          <p className="text-white/40 mt-2">All your previously generated assignments.</p>
+        <div className="mb-6">
+          <h1 className="text-2xl md:text-3xl font-bold">History 🕐</h1>
+          <p className="text-white/40 mt-2 text-sm">All your previously generated assignments.</p>
         </div>
 
         {/* Search + Filter + Sort */}
-        <div className="flex flex-col md:flex-row gap-3 mb-6">
+        <div className="flex flex-col gap-3 mb-6">
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search assignments..."
-            className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm outline-none focus:border-violet-500 transition placeholder:text-white/20"
+            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm outline-none focus:border-violet-500 transition placeholder:text-white/20"
           />
-          <select
-            value={filterFormat}
-            onChange={(e) => setFilterFormat(e.target.value)}
-            className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm outline-none focus:border-violet-500 transition text-white [&>option]:bg-[#111] [&>option]:text-white"
-          >
-            <option value="all">All Formats</option>
-            {FORMATS.map((f) => (
-              <option key={f} value={f}>{f.toUpperCase()}</option>
-            ))}
-          </select>
-          <select
-            value={sortOrder}
-            onChange={(e) => setSortOrder(e.target.value)}
-            className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm outline-none focus:border-violet-500 transition text-white [&>option]:bg-[#111] [&>option]:text-white"
-          >
-            <option value="newest">Newest First</option>
-            <option value="oldest">Oldest First</option>
-          </select>
+          <div className="flex gap-3">
+            <select
+              value={filterFormat}
+              onChange={(e) => setFilterFormat(e.target.value)}
+              className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm outline-none focus:border-violet-500 transition text-white [&>option]:bg-[#111] [&>option]:text-white"
+            >
+              <option value="all">All Formats</option>
+              {FORMATS.map((f) => (
+                <option key={f} value={f}>{f.toUpperCase()}</option>
+              ))}
+            </select>
+            <select
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value)}
+              className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm outline-none focus:border-violet-500 transition text-white [&>option]:bg-[#111] [&>option]:text-white"
+            >
+              <option value="newest">Newest First</option>
+              <option value="oldest">Oldest First</option>
+            </select>
+          </div>
         </div>
 
         {/* Modal */}
         {selected && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center px-4">
-            <div className="bg-[#111] border border-white/10 rounded-2xl p-8 max-w-2xl w-full max-h-[85vh] overflow-y-auto">
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-end md:items-center justify-center px-0 md:px-4">
+            <div className="bg-[#111] border border-white/10 rounded-t-2xl md:rounded-2xl p-5 md:p-8 w-full md:max-w-2xl max-h-[90vh] overflow-y-auto">
 
               <div className="flex items-start justify-between mb-6">
-                <div>
-                  <h2 className="text-xl font-bold">{selected.title}</h2>
+                <div className="pr-4">
+                  <h2 className="text-lg md:text-xl font-bold">{selected.title}</h2>
                   <p className="text-white/40 text-sm mt-1">{new Date(selected.createdAt).toLocaleDateString()}</p>
                 </div>
                 <button
                   onClick={() => { setSelected(null); setEditing(false); setEditingQuestion(false); }}
-                  className="text-white/40 hover:text-white text-2xl transition"
+                  className="text-white/40 hover:text-white text-2xl transition shrink-0"
                 >✕</button>
               </div>
 
@@ -225,10 +239,7 @@ export default function HistoryPage() {
               <div className="mb-4">
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-xs text-violet-400 uppercase tracking-wider">Question</p>
-                  <button
-                    onClick={() => setEditingQuestion(!editingQuestion)}
-                    className="text-xs text-white/40 hover:text-violet-400 transition"
-                  >
+                  <button onClick={() => setEditingQuestion(!editingQuestion)} className="text-xs text-white/40 hover:text-violet-400 transition">
                     {editingQuestion ? "Cancel" : "✏️ Edit"}
                   </button>
                 </div>
@@ -257,10 +268,7 @@ export default function HistoryPage() {
               <div className="mb-6">
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-xs text-violet-400 uppercase tracking-wider">Generated Content</p>
-                  <button
-                    onClick={() => setEditing(!editing)}
-                    className="text-xs text-white/40 hover:text-violet-400 transition"
-                  >
+                  <button onClick={() => setEditing(!editing)} className="text-xs text-white/40 hover:text-violet-400 transition">
                     {editing ? "Cancel Edit" : "✏️ Edit"}
                   </button>
                 </div>
@@ -268,11 +276,11 @@ export default function HistoryPage() {
                   <textarea
                     value={editedContent}
                     onChange={(e) => setEditedContent(e.target.value)}
-                    rows={10}
+                    rows={8}
                     className="w-full bg-white/5 border border-violet-500/40 rounded-xl p-4 text-sm text-white/70 outline-none resize-none font-sans"
                   />
                 ) : (
-                  <pre className="text-white/70 text-sm bg-white/5 rounded-xl p-4 whitespace-pre-wrap font-sans max-h-60 overflow-y-auto">
+                  <pre className="text-white/70 text-sm bg-white/5 rounded-xl p-4 whitespace-pre-wrap font-sans max-h-48 overflow-y-auto">
                     {regenerating ? "Regenerating..." : selected.content}
                   </pre>
                 )}
@@ -295,10 +303,11 @@ export default function HistoryPage() {
                     <button
                       key={f}
                       onClick={() => setSelectedFormat(f)}
-                      className={`py-2 rounded-xl text-sm border transition ${(selectedFormat || selected.format) === f
-                        ? "border-violet-500 bg-violet-500/10 text-white"
-                        : "border-white/10 bg-white/5 text-white/50 hover:border-white/30"
-                        }`}
+                      className={`py-2 rounded-xl text-xs md:text-sm border transition ${
+                        (selectedFormat || selected.format) === f
+                          ? "border-violet-500 bg-violet-500/10 text-white"
+                          : "border-white/10 bg-white/5 text-white/50 hover:border-white/30"
+                      }`}
                     >
                       {FORMAT_ICONS[f]} {f.toUpperCase()}
                     </button>
@@ -364,13 +373,13 @@ export default function HistoryPage() {
               <div
                 key={a._id}
                 onClick={() => openSelected(a)}
-                className="bg-white/5 border border-white/10 hover:border-violet-500/40 rounded-2xl p-6 transition cursor-pointer"
+                className="bg-white/5 border border-white/10 hover:border-violet-500/40 rounded-2xl p-4 md:p-6 transition cursor-pointer"
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">{FORMAT_ICONS[a.format]}</span>
-                    <div>
-                      <h3 className="font-semibold">{a.title}</h3>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="text-2xl shrink-0">{FORMAT_ICONS[a.format]}</span>
+                    <div className="min-w-0">
+                      <h3 className="font-semibold truncate">{a.title}</h3>
                       <p className="text-white/40 text-sm mt-1 line-clamp-1">{a.question}</p>
                     </div>
                   </div>

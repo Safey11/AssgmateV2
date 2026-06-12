@@ -21,6 +21,7 @@ export default function GeneratePage() {
   const [uploadingPdf, setUploadingPdf] = useState(false);
   const [pdfName, setPdfName] = useState(null);
   const [user, setUser] = useState(null);
+  const [menuOpen, setMenuOpen] = useState(false);
   const fileRef = useRef(null);
 
   useEffect(() => {
@@ -78,7 +79,6 @@ export default function GeneratePage() {
       a.click();
       window.URL.revokeObjectURL(url);
 
-      // Refresh user data after generation
       fetch("/api/user/me").then((r) => r.json()).then(setUser);
     } catch (err) {
       setError(err.message);
@@ -91,25 +91,43 @@ export default function GeneratePage() {
     <main className="min-h-screen bg-[#0a0a0a] text-white">
 
       {/* Navbar */}
-      <nav className="flex items-center justify-between px-8 py-5 border-b border-white/10">
+      <nav className="flex items-center justify-between px-6 py-5 border-b border-white/10 relative">
         <span className="text-xl font-bold tracking-tight">Assign<span className="text-violet-400">Mate</span></span>
-        <div className="flex items-center gap-6">
+
+        {/* Desktop Nav */}
+        <div className="hidden md:flex items-center gap-6">
           <Link href="/dashboard" className="text-sm text-white/60 hover:text-white transition">Dashboard</Link>
           <Link href="/history" className="text-sm text-white/60 hover:text-white transition">History</Link>
         </div>
+
+        {/* Mobile Hamburger */}
+        <button onClick={() => setMenuOpen(!menuOpen)} className="md:hidden flex flex-col gap-1.5 p-2">
+          <span className={`block w-6 h-0.5 bg-white transition-all ${menuOpen ? "rotate-45 translate-y-2" : ""}`} />
+          <span className={`block w-6 h-0.5 bg-white transition-all ${menuOpen ? "opacity-0" : ""}`} />
+          <span className={`block w-6 h-0.5 bg-white transition-all ${menuOpen ? "-rotate-45 -translate-y-2" : ""}`} />
+        </button>
+
+        {/* Mobile Menu */}
+        {menuOpen && (
+          <div className="absolute top-full left-0 right-0 bg-[#111] border-b border-white/10 flex flex-col px-6 py-4 gap-4 md:hidden z-50">
+            <Link href="/dashboard" onClick={() => setMenuOpen(false)} className="text-sm text-white/60 hover:text-white transition">Dashboard</Link>
+            <Link href="/history" onClick={() => setMenuOpen(false)} className="text-sm text-white/60 hover:text-white transition">History</Link>
+          </div>
+        )}
       </nav>
 
-      <div className="max-w-3xl mx-auto px-6 py-12">
+      <div className="max-w-3xl mx-auto px-4 md:px-6 py-8 md:py-12">
 
-        <div className="flex items-start justify-between mb-8">
+        {/* Header + Counter */}
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-bold">Generate Assignment ✨</h1>
-            <p className="text-white/40 mt-2">Paste your question, pick a format, download your file.</p>
+            <h1 className="text-2xl md:text-3xl font-bold">Generate Assignment ✨</h1>
+            <p className="text-white/40 mt-2 text-sm">Paste your question, pick a format, download your file.</p>
           </div>
 
           {/* Generations Counter */}
           {user && (
-            <div className={`text-right shrink-0 px-4 py-3 rounded-xl border ${
+            <div className={`shrink-0 px-4 py-3 rounded-xl border ${
               isFreePlan && generationsLeft <= 1
                 ? "bg-red-500/10 border-red-500/20"
                 : isFreePlan
@@ -154,14 +172,14 @@ export default function GeneratePage() {
 
           {/* Question */}
           <div>
-            <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center justify-between mb-2 gap-2">
               <label className="text-sm text-white/60">Assignment Question</label>
               <button
                 onClick={() => fileRef.current.click()}
                 disabled={uploadingPdf}
-                className="flex items-center gap-2 text-xs bg-white/5 border border-white/10 hover:border-violet-500/40 px-3 py-1.5 rounded-lg transition text-white/50 hover:text-white"
+                className="flex items-center gap-1 text-xs bg-white/5 border border-white/10 hover:border-violet-500/40 px-3 py-1.5 rounded-lg transition text-white/50 hover:text-white shrink-0"
               >
-                📎 {uploadingPdf ? "Reading PDF..." : pdfName ? pdfName : "Upload PDF"}
+                📎 {uploadingPdf ? "Reading..." : pdfName ? pdfName.slice(0, 10) + "..." : "Upload PDF"}
               </button>
               <input
                 ref={fileRef}
@@ -188,7 +206,7 @@ export default function GeneratePage() {
                 <button
                   key={f.id}
                   onClick={() => setFormat(f.id)}
-                  className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition ${
+                  className={`flex flex-col items-center gap-2 p-3 md:p-4 rounded-xl border transition ${
                     format === f.id
                       ? "border-violet-500 bg-violet-500/10 text-white"
                       : "border-white/10 bg-white/5 text-white/50 hover:border-white/30 hover:text-white"

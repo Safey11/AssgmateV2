@@ -1,35 +1,61 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 
 export default function LandingPage() {
+  const [menuOpen, setMenuOpen] = useState(false);
+
   return (
     <main className="min-h-screen bg-[#0a0a0a] text-white">
 
       {/* Navbar */}
-      <nav className="flex items-center justify-between px-8 py-5 border-b border-white/10">
+      <nav className="flex items-center justify-between px-6 py-5 border-b border-white/10 relative">
         <span className="text-xl font-bold tracking-tight">Assign<span className="text-violet-400">Mate</span></span>
-        <div className="flex items-center gap-4">
+
+        {/* Desktop Nav */}
+        <div className="hidden md:flex items-center gap-4">
           <Link href="/about" className="text-sm text-white/60 hover:text-white transition">About</Link>
           <Link href="/pricing" className="text-sm text-white/60 hover:text-white transition">Pricing</Link>
           <Link href="/login" className="text-sm bg-violet-600 hover:bg-violet-500 px-4 py-2 rounded-lg transition">Login</Link>
         </div>
+
+        {/* Mobile Hamburger */}
+        <button
+          onClick={() => setMenuOpen(!menuOpen)}
+          className="md:hidden flex flex-col gap-1.5 p-2"
+        >
+          <span className={`block w-6 h-0.5 bg-white transition-all ${menuOpen ? "rotate-45 translate-y-2" : ""}`} />
+          <span className={`block w-6 h-0.5 bg-white transition-all ${menuOpen ? "opacity-0" : ""}`} />
+          <span className={`block w-6 h-0.5 bg-white transition-all ${menuOpen ? "-rotate-45 -translate-y-2" : ""}`} />
+        </button>
+
+        {/* Mobile Menu */}
+        {menuOpen && (
+          <div className="absolute top-full left-0 right-0 bg-[#111] border-b border-white/10 flex flex-col px-6 py-4 gap-4 md:hidden z-50">
+            <Link href="/about" onClick={() => setMenuOpen(false)} className="text-sm text-white/60 hover:text-white transition">About</Link>
+            <Link href="/pricing" onClick={() => setMenuOpen(false)} className="text-sm text-white/60 hover:text-white transition">Pricing</Link>
+            <Link href="/login" onClick={() => setMenuOpen(false)} className="text-sm bg-violet-600 hover:bg-violet-500 px-4 py-2 rounded-lg transition text-center">Login</Link>
+          </div>
+        )}
       </nav>
 
       {/* Hero */}
-      <section className="flex flex-col items-center text-center px-6 pt-24 pb-16">
+      <section className="flex flex-col items-center text-center px-6 pt-16 md:pt-24 pb-16">
         <span className="text-xs bg-violet-500/10 text-violet-400 border border-violet-500/20 px-3 py-1 rounded-full mb-6">
           🎓 Built for students like you
         </span>
-        <h1 className="text-5xl md:text-6xl font-extrabold leading-tight max-w-3xl">
+        <h1 className="text-4xl md:text-6xl font-extrabold leading-tight max-w-3xl">
           Stop wasting hours on <span className="text-violet-400">assignments</span>
         </h1>
-        <p className="mt-6 text-lg text-white/50 max-w-xl">
+        <p className="mt-6 text-base md:text-lg text-white/50 max-w-xl">
           Paste your question, pick your format — get a ready to submit Word, PDF, Excel or PowerPoint file in seconds.
         </p>
-        <div className="flex gap-4 mt-10">
-          <Link href="/register" className="bg-violet-600 hover:bg-violet-500 text-white px-6 py-3 rounded-xl font-semibold transition">
+        <div className="flex flex-col sm:flex-row gap-4 mt-10 w-full sm:w-auto">
+          <Link href="/register" className="bg-violet-600 hover:bg-violet-500 text-white px-6 py-3 rounded-xl font-semibold transition text-center">
             Get Started Free
           </Link>
-          <Link href="/pricing" className="border border-white/10 hover:border-white/30 px-6 py-3 rounded-xl text-white/60 hover:text-white transition">
+          <Link href="/pricing" className="border border-white/10 hover:border-white/30 px-6 py-3 rounded-xl text-white/60 hover:text-white transition text-center">
             See Pricing
           </Link>
         </div>
@@ -73,10 +99,10 @@ export default function LandingPage() {
       </section>
 
       {/* CTA */}
-      <section className="px-6 py-20 text-center">
-        <div className="bg-violet-600/10 border border-violet-500/20 rounded-3xl p-12 max-w-2xl mx-auto">
-          <h2 className="text-3xl font-bold mb-4">Ready to save hours?</h2>
-          <p className="text-white/50 mb-8">Join students from universities across Pakistan.</p>
+      <section className="px-6 py-16 text-center">
+        <div className="bg-violet-600/10 border border-violet-500/20 rounded-3xl p-8 md:p-12 max-w-2xl mx-auto">
+          <h2 className="text-2xl md:text-3xl font-bold mb-4">Ready to save hours?</h2>
+          <p className="text-white/50 mb-8 text-sm md:text-base">Join students from universities across Pakistan.</p>
           <Link href="/register" className="bg-violet-600 hover:bg-violet-500 text-white px-8 py-3 rounded-xl font-semibold transition">
             Start for Free
           </Link>
@@ -84,8 +110,8 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-white/10 px-8 py-6 text-center text-white/30 text-sm">
-        <div className="flex items-center justify-center gap-6 mb-3">
+      <footer className="border-t border-white/10 px-6 py-6 text-center text-white/30 text-sm">
+        <div className="flex flex-wrap items-center justify-center gap-4 mb-3">
           <Link href="/about" className="hover:text-white transition">About</Link>
           <Link href="/pricing" className="hover:text-white transition">Pricing</Link>
           <Link href="/privacy" className="hover:text-white transition">Privacy Policy</Link>
