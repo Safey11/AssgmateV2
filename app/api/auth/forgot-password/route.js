@@ -2,9 +2,6 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import User from "@/models/User";
 import crypto from "crypto";
-import { Resend } from "resend";
-
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(req) {
   try {
@@ -14,17 +11,19 @@ export async function POST(req) {
     await connectDB();
     const user = await User.findOne({ email });
 
-    // Always return success even if user not found (security)
     if (!user) return NextResponse.json({ message: "If this email exists you will receive a reset link" });
 
     const token = crypto.randomBytes(32).toString("hex");
-    const expiry = new Date(Date.now() + 1000 * 60 * 60); // 1 hour
+    const expiry = new Date(Date.now() + 1000 * 60 * 60);
 
     user.resetToken = token;
     user.resetTokenExpiry = expiry;
     await user.save();
 
     const resetUrl = `${process.env.NEXTAUTH_URL}/reset-password?token=${token}`;
+
+    const { Resend } = await import("resend");
+    const resend = new Resend(process.env.RESEND_API_KEY);
 
     await resend.emails.send({
       from: "AssignMate <onboarding@resend.dev>",
