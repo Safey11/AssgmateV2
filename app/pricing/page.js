@@ -37,6 +37,37 @@ const PLANS = [
 
 export default function PricingPage() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showPayForm, setShowPayForm] = useState(false);
+  const [transactionId, setTransactionId] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState(null);
+
+  async function handlePaymentSubmit() {
+    if (!transactionId.trim()) return setError("Transaction ID is required");
+    setSubmitting(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/payment/notify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ transactionId, amount: "500" }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        if (res.status === 401) {
+          setError("Please login first to submit payment");
+          return;
+        }
+        return setError(data.error);
+      }
+      setSubmitted(true);
+    } catch (err) {
+      setError("Something went wrong. Try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
   return (
     <main className="min-h-screen bg-[#0a0a0a] text-white">
@@ -45,20 +76,17 @@ export default function PricingPage() {
       <nav className="flex items-center justify-between px-6 py-5 border-b border-white/10 relative">
         <span className="text-xl font-bold tracking-tight">Assign<span className="text-violet-400">Mate</span></span>
 
-        {/* Desktop Nav */}
         <div className="hidden md:flex items-center gap-4">
           <Link href="/" className="text-sm text-white/60 hover:text-white transition">Home</Link>
           <Link href="/login" className="text-sm bg-violet-600 hover:bg-violet-500 px-4 py-2 rounded-lg transition">Login</Link>
         </div>
 
-        {/* Mobile Hamburger */}
         <button onClick={() => setMenuOpen(!menuOpen)} className="md:hidden flex flex-col gap-1.5 p-2">
           <span className={`block w-6 h-0.5 bg-white transition-all ${menuOpen ? "rotate-45 translate-y-2" : ""}`} />
           <span className={`block w-6 h-0.5 bg-white transition-all ${menuOpen ? "opacity-0" : ""}`} />
           <span className={`block w-6 h-0.5 bg-white transition-all ${menuOpen ? "-rotate-45 -translate-y-2" : ""}`} />
         </button>
 
-        {/* Mobile Menu */}
         {menuOpen && (
           <div className="absolute top-full left-0 right-0 bg-[#111] border-b border-white/10 flex flex-col px-6 py-4 gap-4 md:hidden z-50">
             <Link href="/" onClick={() => setMenuOpen(false)} className="text-sm text-white/60 hover:text-white transition">Home</Link>
@@ -109,7 +137,7 @@ export default function PricingPage() {
               </ul>
 
               
-              <a  href={plan.href}
+               <a href={plan.href}
                 className={`w-full text-center py-3 rounded-xl font-semibold transition ${
                   plan.highlighted
                     ? "bg-violet-600 hover:bg-violet-500 text-white"
@@ -123,7 +151,7 @@ export default function PricingPage() {
         </div>
 
         {/* How to Pay */}
-        <div id="how-to-pay" className="bg-white/5 border border-white/10 rounded-2xl p-5 md:p-8 mb-6 md:mb-8">
+        <div id="how-to-pay" className="bg-white/5 border border-white/10 rounded-2xl p-5 md:p-8 mb-6">
           <h2 className="text-xl md:text-2xl font-bold mb-2">How to Upgrade 🚀</h2>
           <p className="text-white/40 text-sm mb-8">3 simple steps — takes less than 2 minutes</p>
 
@@ -164,13 +192,82 @@ export default function PricingPage() {
             {/* Step 3 */}
             <div className="flex gap-4">
               <div className="w-9 h-9 rounded-full bg-violet-600 flex items-center justify-center text-sm font-bold shrink-0">3</div>
-              <div>
-                <p className="font-semibold text-base md:text-lg">Get upgraded within 24 hours</p>
-                <p className="text-white/40 text-sm mt-1">Once we confirm your payment your account will be upgraded to Pro. You'll get unlimited generations right away.</p>
+              <div className="flex-1">
+                <p className="font-semibold text-base md:text-lg">Click "I've Paid" below</p>
+                <p className="text-white/40 text-sm mt-1">Submit your JazzCash transaction ID and we'll upgrade your account within minutes.</p>
               </div>
             </div>
 
           </div>
+        </div>
+
+        {/* I've Paid Section */}
+        <div className="bg-violet-600/10 border border-violet-500/20 rounded-2xl p-5 md:p-8 mb-6">
+          {submitted ? (
+            <div className="text-center py-4">
+              <span className="text-5xl">✅</span>
+              <h2 className="text-xl font-bold mt-4 mb-2">Payment Submitted!</h2>
+              <p className="text-white/40 text-sm">We've received your payment request. Your account will be upgraded within minutes after verification.</p>
+              <p className="text-violet-400 text-sm mt-3">We'll notify you on WhatsApp once upgraded.</p>
+            </div>
+          ) : showPayForm ? (
+            <div>
+              <h2 className="text-xl font-bold mb-2">Submit Payment ✅</h2>
+              <p className="text-white/40 text-sm mb-6">Enter your JazzCash transaction ID to confirm your payment.</p>
+
+              <div className="flex flex-col gap-4">
+                <div>
+                  <label className="text-sm text-white/60 mb-2 block">JazzCash Transaction ID</label>
+                  <input
+                    type="text"
+                    value={transactionId}
+                    onChange={(e) => setTransactionId(e.target.value)}
+                    placeholder="e.g. TXN123456789"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm outline-none focus:border-violet-500 transition placeholder:text-white/20"
+                  />
+                  <p className="text-white/30 text-xs mt-2">Find this in your JazzCash app under transaction history</p>
+                </div>
+
+                {error && (
+                  <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-sm px-4 py-3 rounded-xl">
+                    {error}
+                    {error.includes("login") && (
+                      <Link href="/login" className="ml-2 underline text-violet-400">Login →</Link>
+                    )}
+                  </div>
+                )}
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={handlePaymentSubmit}
+                    disabled={submitting}
+                    className="flex-1 bg-violet-600 hover:bg-violet-500 disabled:opacity-40 py-3 rounded-xl font-semibold transition"
+                  >
+                    {submitting ? "Submitting..." : "Submit Payment"}
+                  </button>
+                  <button
+                    onClick={() => { setShowPayForm(false); setError(null); }}
+                    className="px-4 py-3 rounded-xl border border-white/10 hover:border-white/30 transition text-white/60"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-bold mb-1">Already paid? 💸</h2>
+                <p className="text-white/40 text-sm">Submit your transaction ID and get upgraded within minutes.</p>
+              </div>
+              <button
+                onClick={() => setShowPayForm(true)}
+                className="w-full md:w-auto bg-violet-600 hover:bg-violet-500 px-8 py-3 rounded-xl font-semibold transition shrink-0"
+              >
+                ✅ I've Paid
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Contact */}
