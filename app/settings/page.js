@@ -11,6 +11,7 @@ export default function SettingsPage() {
   const [message, setMessage] = useState(null);
   const [nameForm, setNameForm] = useState({ name: "" });
   const [passwordForm, setPasswordForm] = useState({ current: "", newPass: "", confirm: "" });
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     fetch("/api/user/me")
@@ -82,9 +83,11 @@ export default function SettingsPage() {
     <main className="min-h-screen bg-[#0a0a0a] text-white">
 
       {/* Navbar */}
-      <nav className="flex items-center justify-between px-8 py-5 border-b border-white/10">
+      <nav className="flex items-center justify-between px-6 py-5 border-b border-white/10 relative">
         <span className="text-xl font-bold tracking-tight">Assign<span className="text-violet-400">Mate</span></span>
-        <div className="flex items-center gap-6">
+
+        {/* Desktop Nav */}
+        <div className="hidden md:flex items-center gap-6">
           <Link href="/dashboard" className="text-sm text-white/60 hover:text-white transition">Dashboard</Link>
           <Link href="/generate" className="text-sm text-white/60 hover:text-white transition">Generate</Link>
           <button
@@ -94,12 +97,33 @@ export default function SettingsPage() {
             Logout
           </button>
         </div>
+
+        {/* Mobile Hamburger */}
+        <button onClick={() => setMenuOpen(!menuOpen)} className="md:hidden flex flex-col gap-1.5 p-2">
+          <span className={`block w-6 h-0.5 bg-white transition-all ${menuOpen ? "rotate-45 translate-y-2" : ""}`} />
+          <span className={`block w-6 h-0.5 bg-white transition-all ${menuOpen ? "opacity-0" : ""}`} />
+          <span className={`block w-6 h-0.5 bg-white transition-all ${menuOpen ? "-rotate-45 -translate-y-2" : ""}`} />
+        </button>
+
+        {/* Mobile Menu */}
+        {menuOpen && (
+          <div className="absolute top-full left-0 right-0 bg-[#111] border-b border-white/10 flex flex-col px-6 py-4 gap-4 md:hidden z-50">
+            <Link href="/dashboard" onClick={() => setMenuOpen(false)} className="text-sm text-white/60 hover:text-white transition">Dashboard</Link>
+            <Link href="/generate" onClick={() => setMenuOpen(false)} className="text-sm text-white/60 hover:text-white transition">Generate</Link>
+            <button
+              onClick={async () => { await signOut({ redirect: false }); window.location.href = "/login"; }}
+              className="text-sm bg-white/5 border border-white/10 px-4 py-2 rounded-lg transition text-left"
+            >
+              Logout
+            </button>
+          </div>
+        )}
       </nav>
 
-      <div className="max-w-2xl mx-auto px-6 py-12">
+      <div className="max-w-2xl mx-auto px-4 md:px-6 py-8 md:py-12">
 
         <div className="mb-8">
-          <h1 className="text-3xl font-bold">Settings ⚙️</h1>
+          <h1 className="text-2xl md:text-3xl font-bold">Settings ⚙️</h1>
           <p className="text-white/40 mt-2">Manage your account details.</p>
         </div>
 
@@ -115,15 +139,15 @@ export default function SettingsPage() {
         )}
 
         {/* Account Info */}
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-6">
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-5 md:p-6 mb-6">
           <h2 className="text-lg font-semibold mb-4">Account Info</h2>
           <div className="flex items-center gap-4 mb-6">
-            <div className="w-14 h-14 rounded-full bg-violet-600 flex items-center justify-center text-xl font-bold">
+            <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-violet-600 flex items-center justify-center text-xl font-bold shrink-0">
               {user?.name?.charAt(0).toUpperCase()}
             </div>
-            <div>
-              <p className="font-semibold">{user?.name}</p>
-              <p className="text-white/40 text-sm">{user?.email}</p>
+            <div className="min-w-0">
+              <p className="font-semibold truncate">{user?.name}</p>
+              <p className="text-white/40 text-sm truncate">{user?.email}</p>
               <span className={`text-xs px-2 py-0.5 rounded-full border mt-1 inline-block ${
                 user?.plan === "pro"
                   ? "bg-violet-500/10 text-violet-400 border-violet-500/20"
@@ -147,7 +171,7 @@ export default function SettingsPage() {
               <button
                 onClick={handleUpdateName}
                 disabled={saving}
-                className="bg-violet-600 hover:bg-violet-500 disabled:opacity-40 px-4 py-3 rounded-xl text-sm font-semibold transition"
+                className="bg-violet-600 hover:bg-violet-500 disabled:opacity-40 px-4 py-3 rounded-xl text-sm font-semibold transition shrink-0"
               >
                 Save
               </button>
@@ -156,7 +180,7 @@ export default function SettingsPage() {
         </div>
 
         {/* Change Password */}
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-6">
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-5 md:p-6 mb-6">
           <h2 className="text-lg font-semibold mb-4">Change Password</h2>
           <div className="flex flex-col gap-4">
             <div>
@@ -200,9 +224,9 @@ export default function SettingsPage() {
         </div>
 
         {/* Plan */}
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-          <h2 className="text-lg font-semibold mb-2">Your Plan</h2>
-          <div className="flex items-center justify-between">
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-5 md:p-6">
+          <h2 className="text-lg font-semibold mb-3">Your Plan</h2>
+          <div className="flex items-center justify-between gap-4">
             <div>
               <p className="font-semibold">{user?.plan === "pro" ? "Pro Plan" : "Free Plan"}</p>
               <p className="text-white/40 text-sm mt-1">
@@ -212,8 +236,8 @@ export default function SettingsPage() {
               </p>
             </div>
             {user?.plan !== "pro" && (
-              <Link href="/pricing" className="bg-violet-600 hover:bg-violet-500 px-4 py-2 rounded-xl text-sm font-semibold transition">
-                Upgrade to Pro
+              <Link href="/pricing" className="bg-violet-600 hover:bg-violet-500 px-4 py-2 rounded-xl text-sm font-semibold transition shrink-0">
+                Upgrade
               </Link>
             )}
           </div>
