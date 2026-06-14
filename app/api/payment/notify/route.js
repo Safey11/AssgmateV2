@@ -28,16 +28,22 @@ export async function POST(req) {
     };
     await user.save();
 
-    const client = twilio(
-      process.env.TWILIO_ACCOUNT_SID,
-      process.env.TWILIO_AUTH_TOKEN
-    );
+    // Try WhatsApp — don't fail if Twilio errors
+    try {
+      const client = twilio(
+        process.env.TWILIO_ACCOUNT_SID,
+        process.env.TWILIO_AUTH_TOKEN
+      );
 
-    await client.messages.create({
-      from: process.env.TWILIO_WHATSAPP_FROM,
-      to: process.env.ADMIN_WHATSAPP,
-      body: `🔔 *New Pro Payment Request*\n\n👤 Name: ${user.name}\n📧 Email: ${user.email}\n💰 Amount: Rs ${amount}\n🧾 Receipt: ${receiptUrl}\n⏰ Time: ${new Date().toLocaleString("en-PK")}\n\n✅ Upgrade here:\nhttps://assgmate-v2.vercel.app/admin`,
-    });
+      await client.messages.create({
+        from: process.env.TWILIO_WHATSAPP_FROM,
+        to: process.env.ADMIN_WHATSAPP,
+        body: `🔔 *New Pro Payment Request*\n\n👤 Name: ${user.name}\n📧 Email: ${user.email}\n💰 Amount: Rs ${amount}\n🧾 Receipt: ${receiptUrl}\n⏰ Time: ${new Date().toLocaleString("en-PK")}\n\n✅ Upgrade here:\nhttps://assgmate-v2.vercel.app/admin`,
+      });
+    } catch (twilioError) {
+      console.error("Twilio error:", twilioError.message);
+      // Continue even if WhatsApp fails — payment is already saved
+    }
 
     return NextResponse.json({ message: "Payment submitted successfully" });
   } catch (error) {
