@@ -19,7 +19,7 @@ export const ourFileRouter = {
           { email: metadata.email },
           {
             pendingPayment: {
-              receiptUrl: file.url,
+              receiptUrl:file.ufsUrl,
               amount: "500",
               submittedAt: new Date(),
               status: "pending",
@@ -30,6 +30,6 @@ export const ourFileRouter = {
       } catch (error) {
         console.error("Error saving receipt:", error);
       }
-      return { url: file.url };
+      return { url: file.ufsUrl };
     }),
 };
