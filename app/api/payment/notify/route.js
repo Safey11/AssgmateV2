@@ -11,25 +11,23 @@ export async function POST(req) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { transactionId, amount } = await req.json();
-    if (!transactionId) {
-      return NextResponse.json({ error: "Transaction ID required" }, { status: 400 });
+    const { receiptUrl, amount } = await req.json();
+    if (!receiptUrl) {
+      return NextResponse.json({ error: "Receipt is required" }, { status: 400 });
     }
 
     await connectDB();
     const user = await User.findOne({ email: session.user.email });
     if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
-    // Save payment request
     user.pendingPayment = {
-      transactionId,
+      receiptUrl,
       amount,
       submittedAt: new Date(),
       status: "pending",
     };
     await user.save();
 
-    // Send WhatsApp notification to admin
     const client = twilio(
       process.env.TWILIO_ACCOUNT_SID,
       process.env.TWILIO_AUTH_TOKEN
@@ -38,7 +36,7 @@ export async function POST(req) {
     await client.messages.create({
       from: process.env.TWILIO_WHATSAPP_FROM,
       to: process.env.ADMIN_WHATSAPP,
-      body: `🔔 *New Pro Payment Request*\n\n👤 Name: ${user.name}\n📧 Email: ${user.email}\n💳 Transaction ID: ${transactionId}\n💰 Amount: Rs ${amount}\n⏰ Time: ${new Date().toLocaleString("en-PK")}\n\n✅ Go to admin panel to upgrade:\nhttps://assgmate-v2.vercel.app/admin`,
+      body: `🔔 *New Pro Payment Request*\n\n👤 Name: ${user.name}\n📧 Email: ${user.email}\n💰 Amount: Rs ${amount}\n🧾 Receipt: ${receiptUrl}\n⏰ Time: ${new Date().toLocaleString("en-PK")}\n\n✅ Upgrade here:\nhttps://assgmate-v2.vercel.app/admin`,
     });
 
     return NextResponse.json({ message: "Payment submitted successfully" });

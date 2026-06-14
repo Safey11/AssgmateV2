@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useUploadThing } from "@/lib/uploadthing";
 
 const PLANS = [
   {
@@ -38,20 +39,42 @@ const PLANS = [
 export default function PricingPage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [showPayForm, setShowPayForm] = useState(false);
-  const [transactionId, setTransactionId] = useState("");
+  const [receipt, setReceipt] = useState(null);
+  const [receiptPreview, setReceiptPreview] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState(null);
 
+  const { startUpload } = useUploadThing("receiptUploader");
+
+  function handleFileChange(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setError("Please upload an image file");
+      return;
+    }
+    setReceipt(file);
+    setReceiptPreview(URL.createObjectURL(file));
+    setError(null);
+  }
+
   async function handlePaymentSubmit() {
-    if (!transactionId.trim()) return setError("Transaction ID is required");
+    if (!receipt) return setError("Please upload your JazzCash receipt");
     setSubmitting(true);
+    setUploading(true);
     setError(null);
     try {
+      const uploaded = await startUpload([receipt]);
+      if (!uploaded || !uploaded[0]) throw new Error("Upload failed");
+      const receiptUrl = uploaded[0].url;
+      setUploading(false);
+
       const res = await fetch("/api/payment/notify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ transactionId, amount: "500" }),
+        body: JSON.stringify({ receiptUrl, amount: "500" }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -63,9 +86,10 @@ export default function PricingPage() {
       }
       setSubmitted(true);
     } catch (err) {
-      setError("Something went wrong. Try again.");
+      setError(err.message || "Something went wrong. Try again.");
     } finally {
       setSubmitting(false);
+      setUploading(false);
     }
   }
 
@@ -156,8 +180,6 @@ export default function PricingPage() {
           <p className="text-white/40 text-sm mb-8">3 simple steps — takes less than 2 minutes</p>
 
           <div className="flex flex-col gap-8">
-
-            {/* Step 1 */}
             <div className="flex gap-4">
               <div className="w-9 h-9 rounded-full bg-violet-600 flex items-center justify-center text-sm font-bold shrink-0">1</div>
               <div className="flex-1 min-w-0">
@@ -175,29 +197,23 @@ export default function PricingPage() {
 
             <div className="border-t border-white/5" />
 
-            {/* Step 2 */}
             <div className="flex gap-4">
               <div className="w-9 h-9 rounded-full bg-violet-600 flex items-center justify-center text-sm font-bold shrink-0">2</div>
               <div className="min-w-0">
-                <p className="font-semibold text-base md:text-lg">Add your email in the message</p>
-                <p className="text-white/40 text-sm mt-1">Write your AssignMate account email in the description field.</p>
-                <div className="bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 mt-3 text-xs md:text-sm text-white/50 font-mono break-all">
-                  e.g. "yourname@gmail.com — AssignMate Pro"
-                </div>
+                <p className="font-semibold text-base md:text-lg">Take a screenshot of the receipt</p>
+                <p className="text-white/40 text-sm mt-1">Take a screenshot of your JazzCash payment confirmation screen.</p>
               </div>
             </div>
 
             <div className="border-t border-white/5" />
 
-            {/* Step 3 */}
             <div className="flex gap-4">
               <div className="w-9 h-9 rounded-full bg-violet-600 flex items-center justify-center text-sm font-bold shrink-0">3</div>
               <div className="flex-1">
-                <p className="font-semibold text-base md:text-lg">Click "I've Paid" below</p>
-                <p className="text-white/40 text-sm mt-1">Submit your JazzCash transaction ID and we'll upgrade your account within minutes.</p>
+                <p className="font-semibold text-base md:text-lg">Upload receipt below</p>
+                <p className="text-white/40 text-sm mt-1">Upload your receipt and we'll upgrade your account within minutes.</p>
               </div>
             </div>
-
           </div>
         </div>
 
@@ -206,27 +222,50 @@ export default function PricingPage() {
           {submitted ? (
             <div className="text-center py-4">
               <span className="text-5xl">✅</span>
-              <h2 className="text-xl font-bold mt-4 mb-2">Payment Submitted!</h2>
-              <p className="text-white/40 text-sm">We've received your payment request. Your account will be upgraded within minutes after verification.</p>
+              <h2 className="text-xl font-bold mt-4 mb-2">Receipt Submitted!</h2>
+              <p className="text-white/40 text-sm">We've received your payment receipt. Your account will be upgraded within minutes after verification.</p>
               <p className="text-violet-400 text-sm mt-3">We'll notify you on WhatsApp once upgraded.</p>
             </div>
           ) : showPayForm ? (
             <div>
-              <h2 className="text-xl font-bold mb-2">Submit Payment ✅</h2>
-              <p className="text-white/40 text-sm mb-6">Enter your JazzCash transaction ID to confirm your payment.</p>
+              <h2 className="text-xl font-bold mb-2">Upload Payment Receipt 🧾</h2>
+              <p className="text-white/40 text-sm mb-6">Upload a screenshot of your JazzCash payment confirmation.</p>
 
               <div className="flex flex-col gap-4">
-                <div>
-                  <label className="text-sm text-white/60 mb-2 block">JazzCash Transaction ID</label>
-                  <input
-                    type="text"
-                    value={transactionId}
-                    onChange={(e) => setTransactionId(e.target.value)}
-                    placeholder="e.g. TXN123456789"
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm outline-none focus:border-violet-500 transition placeholder:text-white/20"
-                  />
-                  <p className="text-white/30 text-xs mt-2">Find this in your JazzCash app under transaction history</p>
+                {/* Upload Area */}
+                <div
+                  onClick={() => document.getElementById("receipt-input").click()}
+                  className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition ${
+                    receiptPreview
+                      ? "border-violet-500/40"
+                      : "border-white/10 hover:border-violet-500/40"
+                  }`}
+                >
+                  {receiptPreview ? (
+                    <div className="flex flex-col items-center gap-3">
+                      <img
+                        src={receiptPreview}
+                        alt="Receipt preview"
+                        className="max-h-48 rounded-xl object-contain"
+                      />
+                      <p className="text-white/40 text-xs">Click to change</p>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-3 text-white/40">
+                      <span className="text-4xl">📸</span>
+                      <p className="text-sm">Click to upload receipt</p>
+                      <p className="text-xs">PNG, JPG up to 4MB</p>
+                    </div>
+                  )}
                 </div>
+
+                <input
+                  id="receipt-input"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
 
                 {error && (
                   <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-sm px-4 py-3 rounded-xl">
@@ -240,13 +279,13 @@ export default function PricingPage() {
                 <div className="flex gap-3">
                   <button
                     onClick={handlePaymentSubmit}
-                    disabled={submitting}
+                    disabled={submitting || !receipt}
                     className="flex-1 bg-violet-600 hover:bg-violet-500 disabled:opacity-40 py-3 rounded-xl font-semibold transition"
                   >
-                    {submitting ? "Submitting..." : "Submit Payment"}
+                    {uploading ? "Uploading receipt..." : submitting ? "Submitting..." : "Submit Receipt"}
                   </button>
                   <button
-                    onClick={() => { setShowPayForm(false); setError(null); }}
+                    onClick={() => { setShowPayForm(false); setError(null); setReceipt(null); setReceiptPreview(null); }}
                     className="px-4 py-3 rounded-xl border border-white/10 hover:border-white/30 transition text-white/60"
                   >
                     Cancel
@@ -258,7 +297,7 @@ export default function PricingPage() {
             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
               <div>
                 <h2 className="text-xl font-bold mb-1">Already paid? 💸</h2>
-                <p className="text-white/40 text-sm">Submit your transaction ID and get upgraded within minutes.</p>
+                <p className="text-white/40 text-sm">Upload your JazzCash receipt and get upgraded within minutes.</p>
               </div>
               <button
                 onClick={() => setShowPayForm(true)}
