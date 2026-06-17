@@ -52,6 +52,7 @@ export default function DashboardPage() {
           <Link href="/generate" className="text-sm text-white/60 hover:text-white transition">Generate</Link>
           <Link href="/history" className="text-sm text-white/60 hover:text-white transition">History</Link>
           <Link href="/pricing" className="text-sm text-white/60 hover:text-white transition">Pricing</Link>
+          <Link href="/referral" className="text-sm text-white/60 hover:text-white transition">Invite Friends 🎁</Link>
           <Link href="/settings" className="text-sm text-white/60 hover:text-white transition">Settings</Link>
           <button
             onClick={async () => { await signOut({ redirect: false }); window.location.href = "/login"; }}
@@ -74,6 +75,7 @@ export default function DashboardPage() {
             <Link href="/generate" onClick={() => setMenuOpen(false)} className="text-sm text-white/60 hover:text-white transition">Generate</Link>
             <Link href="/history" onClick={() => setMenuOpen(false)} className="text-sm text-white/60 hover:text-white transition">History</Link>
             <Link href="/pricing" onClick={() => setMenuOpen(false)} className="text-sm text-white/60 hover:text-white transition">Pricing</Link>
+            <Link href="/referral" onClick={() => setMenuOpen(false)} className="text-sm text-white/60 hover:text-white transition">Invite Friends 🎁</Link>
             <Link href="/settings" onClick={() => setMenuOpen(false)} className="text-sm text-white/60 hover:text-white transition">Settings</Link>
             <button
               onClick={async () => { await signOut({ redirect: false }); window.location.href = "/login"; }}

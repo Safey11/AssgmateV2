@@ -6,6 +6,7 @@ const UserSchema = new mongoose.Schema({
   password: { type: String },
   plan: { type: String, enum: ["free", "pro"], default: "free" },
   generationsUsed: { type: Number, default: 0 },
+  bonusGenerations: { type: Number, default: 0 },
   resetToken: { type: String },
   resetTokenExpiry: { type: Date },
   pendingPayment: {
@@ -18,6 +19,9 @@ const UserSchema = new mongoose.Schema({
   currentStreak: { type: Number, default: 0 },
   longestStreak: { type: Number, default: 0 },
   lastActiveDate: { type: Date },
+  referralCode: { type: String, unique: true },
+  referredBy: { type: String },
+  referralCount: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now },
 });
 
