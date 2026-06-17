@@ -52,8 +52,8 @@ export default function LandingPage() {
           Paste your question, pick your format — get a ready to submit Word, PDF, Excel or PowerPoint file in seconds.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 mt-10 w-full sm:w-auto">
-          <Link href="/register" className="bg-violet-600 hover:bg-violet-500 text-white px-6 py-3 rounded-xl font-semibold transition text-center">
-            Get Started Free
+          <Link href="/generate" className="bg-violet-600 hover:bg-violet-500 text-white px-6 py-3 rounded-xl font-semibold transition text-center">
+            Try It Free — No Signup ✨
           </Link>
           <Link href="/pricing" className="border border-white/10 hover:border-white/30 px-6 py-3 rounded-xl text-white/60 hover:text-white transition text-center">
             See Pricing
@@ -103,8 +103,8 @@ export default function LandingPage() {
         <div className="bg-violet-600/10 border border-violet-500/20 rounded-3xl p-8 md:p-12 max-w-2xl mx-auto">
           <h2 className="text-2xl md:text-3xl font-bold mb-4">Ready to save hours?</h2>
           <p className="text-white/50 mb-8 text-sm md:text-base">Join students from universities across Pakistan.</p>
-          <Link href="/register" className="bg-violet-600 hover:bg-violet-500 text-white px-8 py-3 rounded-xl font-semibold transition">
-            Start for Free
+          <Link href="/generate" className="bg-violet-600 hover:bg-violet-500 text-white px-8 py-3 rounded-xl font-semibold transition">
+            Try It Free Right Now
           </Link>
         </div>
       </section>
