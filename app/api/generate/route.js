@@ -43,11 +43,12 @@ export async function POST(req) {
         );
       }
     } else {
-      // Logged in user - check plan limit
+      // Logged in user - check plan limit (including bonus generations from referrals)
       const user = await User.findOne({ email: session.user.email });
-      if (user && user.plan === "free" && user.generationsUsed >= FREE_LIMIT) {
+      const totalAllowed = FREE_LIMIT + (user?.bonusGenerations || 0);
+      if (user && user.plan === "free" && user.generationsUsed >= totalAllowed) {
         return NextResponse.json(
-          { error: "Free plan limit reached. Please upgrade to Pro for unlimited generations." },
+          { error: "Free plan limit reached. Please upgrade to Pro for unlimited generations, or invite friends for bonus generations!" },
           { status: 403 }
         );
       }
