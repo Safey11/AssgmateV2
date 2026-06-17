@@ -7,6 +7,7 @@ import { signOut, useSession } from "next-auth/react";
 export default function DashboardPage() {
   const { data: session } = useSession();
   const [stats, setStats] = useState({ generated: 0, plan: "Free" });
+  const [streak, setStreak] = useState({ current: 0, longest: 0 });
   const [recent, setRecent] = useState([]);
   const [loading, setLoading] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -28,6 +29,7 @@ export default function DashboardPage() {
         const history = await historyRes.json();
         const user = await userRes.json();
         setStats({ generated: history.length, plan: user.plan || "Free" });
+        setStreak({ current: user.currentStreak || 0, longest: user.longestStreak || 0 });
         setRecent(history.slice(0, 3));
       } catch (err) {
         console.error(err);
@@ -92,6 +94,28 @@ export default function DashboardPage() {
           </h1>
           <p className="text-white/40 mt-2">What do you need to get done today?</p>
         </div>
+
+        {/* Streak Banner */}
+        {!loading && streak.current > 0 && (
+          <div className="bg-gradient-to-r from-orange-500/10 to-red-500/10 border border-orange-500/20 rounded-2xl p-5 mb-8 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <span className="text-4xl">🔥</span>
+              <div>
+                <p className="font-bold text-lg">
+                  {streak.current} day{streak.current !== 1 ? "s" : ""} streak!
+                </p>
+                <p className="text-white/40 text-sm">
+                  {streak.current >= streak.longest
+                    ? "You're on your longest streak ever!"
+                    : `Longest streak: ${streak.longest} days`}
+                </p>
+              </div>
+            </div>
+            <Link href="/generate" className="hidden sm:block bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 px-4 py-2 rounded-xl text-sm font-semibold transition shrink-0">
+              Keep it up →
+            </Link>
+          </div>
+        )}
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-3 md:gap-4 mb-8">

@@ -9,6 +9,7 @@ import Assignment from "@/models/Assignment";
 import User from "@/models/User";
 import { auth } from "@/auth";
 import { cookies } from "next/headers";
+import { calculateStreak } from "@/lib/streak";
 
 const MIME_TYPES = {
   word: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -85,7 +86,17 @@ Provide a well-structured, detailed response with proper headings, explanations,
           format,
           content,
         });
-        await User.findByIdAndUpdate(user._id, { $inc: { generationsUsed: 1 } });
+
+        const streakData = calculateStreak(user);
+
+        await User.findByIdAndUpdate(user._id, {
+          $inc: { generationsUsed: 1 },
+          $set: {
+            currentStreak: streakData.currentStreak,
+            longestStreak: streakData.longestStreak,
+            lastActiveDate: streakData.lastActiveDate,
+          },
+        });
       }
     } else {
       // Set cookie to track anonymous usage

@@ -9,11 +9,15 @@ const UserSchema = new mongoose.Schema({
   resetToken: { type: String },
   resetTokenExpiry: { type: Date },
   pendingPayment: {
+    receiptUrl: { type: String },
     transactionId: { type: String },
     amount: { type: String },
     submittedAt: { type: Date },
     status: { type: String, enum: ["pending", "approved", "rejected"], default: "pending" },
   },
+  currentStreak: { type: Number, default: 0 },
+  longestStreak: { type: Number, default: 0 },
+  lastActiveDate: { type: Date },
   createdAt: { type: Date, default: Date.now },
 });
 
