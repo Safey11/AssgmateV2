@@ -8,6 +8,7 @@ import { connectDB } from "@/lib/mongodb";
 import Assignment from "@/models/Assignment";
 import User from "@/models/User";
 import { auth } from "@/auth";
+import { cookies } from "next/headers";
 
 const MIME_TYPES = {
   word: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -17,6 +18,7 @@ const MIME_TYPES = {
 };
 
 const FREE_LIMIT = 5;
+const ANONYMOUS_LIMIT = 1;
 
 export async function POST(req) {
   try {
@@ -28,9 +30,19 @@ export async function POST(req) {
     }
 
     await connectDB();
+    const cookieStore = await cookies();
 
-    // Check plan limit
-    if (session?.user?.email) {
+    // Handle anonymous users (not logged in)
+    if (!session?.user?.email) {
+      const anonUsed = cookieStore.get("anon_generations")?.value || "0";
+      if (parseInt(anonUsed) >= ANONYMOUS_LIMIT) {
+        return NextResponse.json(
+          { error: "Create a free account to generate more assignments and unlock 5 free generations." },
+          { status: 403 }
+        );
+      }
+    } else {
+      // Logged in user - check plan limit
       const user = await User.findOne({ email: session.user.email });
       if (user && user.plan === "free" && user.generationsUsed >= FREE_LIMIT) {
         return NextResponse.json(
@@ -56,7 +68,13 @@ Provide a well-structured, detailed response with proper headings, explanations,
     else if (format === "pptx") buffer = await generatePPTX(content, fileTitle);
     else buffer = await generatePDF(content, fileTitle);
 
-    // Save to MongoDB and increment count
+    const response = new NextResponse(buffer, {
+      headers: {
+        "Content-Type": MIME_TYPES[format],
+        "Content-Disposition": `attachment; filename="${fileTitle}.${format === "word" ? "docx" : format}"`,
+      },
+    });
+
     if (session?.user?.email) {
       const user = await User.findOne({ email: session.user.email });
       if (user) {
@@ -69,14 +87,16 @@ Provide a well-structured, detailed response with proper headings, explanations,
         });
         await User.findByIdAndUpdate(user._id, { $inc: { generationsUsed: 1 } });
       }
+    } else {
+      // Set cookie to track anonymous usage
+      const anonUsed = parseInt(cookieStore.get("anon_generations")?.value || "0");
+      response.cookies.set("anon_generations", String(anonUsed + 1), {
+        maxAge: 60 * 60 * 24 * 30, // 30 days
+        httpOnly: true,
+      });
     }
 
-    return new NextResponse(buffer, {
-      headers: {
-        "Content-Type": MIME_TYPES[format],
-        "Content-Disposition": `attachment; filename="${fileTitle}.${format === "word" ? "docx" : format}"`,
-      },
-    });
+    return response;
   } catch (error) {
     console.error("Generate error:", error);
     return NextResponse.json({ error: "Generation failed" }, { status: 500 });

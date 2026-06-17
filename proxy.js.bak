@@ -12,16 +12,8 @@ export async function proxy(req) {
   const { pathname } = req.nextUrl;
 
   const isAuthPage = pathname.startsWith("/login") || pathname.startsWith("/register");
-  const isPublicPage =
-    pathname === "/" ||
-    pathname.startsWith("/about") ||
-    pathname.startsWith("/privacy") ||
-    pathname.startsWith("/terms") ||
-    pathname.startsWith("/pricing");
-
   const isProtectedPage =
     pathname.startsWith("/dashboard") ||
-    pathname.startsWith("/generate") ||
     pathname.startsWith("/history");
 
   if (!isLoggedIn && isProtectedPage) {
