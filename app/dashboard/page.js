@@ -6,7 +6,7 @@ import { signOut, useSession } from "next-auth/react";
 
 export default function DashboardPage() {
   const { data: session } = useSession();
-  const [stats, setStats] = useState({ generated: 0, plan: "Free" });
+  const [stats, setStats] = useState({ generated: 0, plan: "Free", bonusGenerations: 0 });
   const [streak, setStreak] = useState({ current: 0, longest: 0 });
   const [recent, setRecent] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -28,7 +28,12 @@ export default function DashboardPage() {
         ]);
         const history = await historyRes.json();
         const user = await userRes.json();
-        setStats({ generated: history.length, plan: user.plan || "Free" });
+        setStats({
+          generated: history.length,
+          plan: user.plan || "Free",
+          bonusGenerations: user.bonusGenerations || 0,
+          referralCount: user.referralCount || 0,
+        });
         setStreak({ current: user.currentStreak || 0, longest: user.longestStreak || 0 });
         setRecent(history.slice(0, 3));
       } catch (err) {
@@ -99,7 +104,7 @@ export default function DashboardPage() {
 
         {/* Streak Banner */}
         {!loading && streak.current > 0 && (
-          <div className="bg-gradient-to-r from-orange-500/10 to-red-500/10 border border-orange-500/20 rounded-2xl p-5 mb-8 flex items-center justify-between">
+          <div className="bg-gradient-to-r from-orange-500/10 to-red-500/10 border border-orange-500/20 rounded-2xl p-5 mb-6 flex items-center justify-between">
             <div className="flex items-center gap-4">
               <span className="text-4xl">🔥</span>
               <div>
@@ -119,11 +124,31 @@ export default function DashboardPage() {
           </div>
         )}
 
+        {/* Referral Banner */}
+        {!loading && stats.plan !== "pro" && (
+          <div className="bg-gradient-to-r from-violet-500/10 to-purple-500/10 border border-violet-500/20 rounded-2xl p-5 mb-8 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <span className="text-4xl">🎁</span>
+              <div>
+                <p className="font-bold">Invite friends, get bonus generations!</p>
+                <p className="text-white/40 text-sm">
+                  {stats.referralCount > 0
+                    ? `${stats.referralCount} friend${stats.referralCount !== 1 ? "s" : ""} invited · ${stats.bonusGenerations} bonus generations earned`
+                    : "You and your friend both get 2 free generations"}
+                </p>
+              </div>
+            </div>
+            <Link href="/referral" className="hidden sm:block bg-violet-600/20 hover:bg-violet-600/30 text-violet-400 px-4 py-2 rounded-xl text-sm font-semibold transition shrink-0">
+              Invite now →
+            </Link>
+          </div>
+        )}
+
         {/* Stats */}
         <div className="grid grid-cols-3 gap-3 md:gap-4 mb-8">
           {[
             { label: "Assignments Generated", value: loading ? "..." : stats.generated, icon: "📝" },
-            { label: "Files Downloaded", value: loading ? "..." : stats.generated, icon: "📥" },
+            { label: "Friends Invited", value: loading ? "..." : stats.referralCount || 0, icon: "👥" },
             { label: "Plan", value: loading ? "..." : stats.plan.charAt(0).toUpperCase() + stats.plan.slice(1), icon: "⚡" },
           ].map((stat) => (
             <div key={stat.label} className={`bg-white/5 border rounded-2xl p-4 md:p-6 ${
@@ -147,10 +172,10 @@ export default function DashboardPage() {
             <h3 className="text-lg font-semibold mt-3 group-hover:text-violet-400 transition">Generate Assignment</h3>
             <p className="text-white/40 text-sm mt-1">Paste your question and get a ready to submit file</p>
           </Link>
-          <Link href="/history" className="bg-white/5 border border-white/10 hover:border-white/30 rounded-2xl p-6 transition group">
-            <span className="text-3xl">🕐</span>
-            <h3 className="text-lg font-semibold mt-3 group-hover:text-white transition">View History</h3>
-            <p className="text-white/40 text-sm mt-1">See all your previously generated assignments</p>
+          <Link href="/referral" className="bg-white/5 border border-white/10 hover:border-violet-500/20 rounded-2xl p-6 transition group">
+            <span className="text-3xl">🎁</span>
+            <h3 className="text-lg font-semibold mt-3 group-hover:text-violet-400 transition">Invite Friends</h3>
+            <p className="text-white/40 text-sm mt-1">Share your link and both get 2 bonus generations</p>
           </Link>
         </div>
 
