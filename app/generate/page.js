@@ -16,6 +16,7 @@ export default function GeneratePage() {
   const [question, setQuestion] = useState("");
   const [title, setTitle] = useState("");
   const [format, setFormat] = useState("word");
+  const [dueDate, setDueDate] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [uploadingPdf, setUploadingPdf] = useState(false);
@@ -40,7 +41,8 @@ export default function GeneratePage() {
   }, []);
 
   const isFreePlan = user?.plan === "free";
-  const generationsLeft = isFreePlan ? FREE_LIMIT - (user?.generationsUsed || 0) : null;
+  const totalAllowed = FREE_LIMIT + (user?.bonusGenerations || 0);
+  const generationsLeft = isFreePlan ? totalAllowed - (user?.generationsUsed || 0) : null;
 
   async function handlePdfUpload(e) {
     const file = e.target.files[0];
@@ -71,7 +73,7 @@ export default function GeneratePage() {
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question, format, title }),
+        body: JSON.stringify({ question, format, title, dueDate: dueDate || null }),
       });
 
       if (res.status === 403) {
@@ -97,7 +99,6 @@ export default function GeneratePage() {
       if (isLoggedIn) {
         fetch("/api/user/me").then((r) => r.json()).then(setUser);
       } else {
-        // First anonymous generation done - show signup prompt
         setShowSignupPrompt(true);
       }
     } catch (err) {
@@ -163,10 +164,7 @@ export default function GeneratePage() {
                 Create a free account to unlock 5 free generations every month, save your history, and access all formats.
               </p>
               <div className="flex flex-col gap-3">
-                <Link
-                  href="/register"
-                  className="bg-violet-600 hover:bg-violet-500 py-3 rounded-xl font-semibold transition"
-                >
+                <Link href="/register" className="bg-violet-600 hover:bg-violet-500 py-3 rounded-xl font-semibold transition">
                   Create Free Account
                 </Link>
                 <button
@@ -191,7 +189,7 @@ export default function GeneratePage() {
             </p>
           </div>
 
-          {/* Generations Counter - only for logged in users */}
+          {/* Generations Counter */}
           {isLoggedIn && user && (
             <div className={`shrink-0 px-4 py-3 rounded-xl border ${
               isFreePlan && generationsLeft <= 1
@@ -205,7 +203,7 @@ export default function GeneratePage() {
                   <p className={`text-lg font-bold ${generationsLeft <= 1 ? "text-red-400" : "text-white"}`}>
                     {generationsLeft} left
                   </p>
-                  <p className="text-white/40 text-xs">of {FREE_LIMIT} free</p>
+                  <p className="text-white/40 text-xs">of {totalAllowed} free</p>
                   {generationsLeft <= 1 && (
                     <Link href="/pricing" className="text-xs text-violet-400 hover:underline mt-1 block">
                       Upgrade →
@@ -243,6 +241,22 @@ export default function GeneratePage() {
               className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm outline-none focus:border-violet-500 transition placeholder:text-white/20"
             />
           </div>
+
+          {/* Due Date - only for logged in users */}
+          {isLoggedIn && (
+            <div>
+              <label className="text-sm text-white/60 mb-2 block">
+                Due Date <span className="text-white/30">(optional — we'll remind you 1 day before)</span>
+              </label>
+              <input
+                type="date"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+                min={new Date().toISOString().split("T")[0]}
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm outline-none focus:border-violet-500 transition text-white/70"
+              />
+            </div>
+          )}
 
           {/* Question */}
           <div>

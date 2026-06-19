@@ -6,6 +6,8 @@ const AssignmentSchema = new mongoose.Schema({
   question: { type: String, required: true },
   format: { type: String, enum: ["word", "excel", "pptx", "pdf"], required: true },
   content: { type: String, required: true },
+  dueDate: { type: Date },
+  reminderSent: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now },
 });
 

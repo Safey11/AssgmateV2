@@ -24,7 +24,7 @@ const ANONYMOUS_LIMIT = 1;
 export async function POST(req) {
   try {
     const session = await auth();
-    const { question, format, title } = await req.json();
+    const { question, format, title, dueDate } = await req.json();
 
     if (!question || !format) {
       return NextResponse.json({ error: "Question and format are required" }, { status: 400 });
@@ -86,6 +86,7 @@ Provide a well-structured, detailed response with proper headings, explanations,
           question,
           format,
           content,
+          dueDate: dueDate ? new Date(dueDate) : null,
         });
 
         const streakData = calculateStreak(user);
