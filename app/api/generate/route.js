@@ -21,10 +21,26 @@ const MIME_TYPES = {
 const FREE_LIMIT = 5;
 const ANONYMOUS_LIMIT = 1;
 
+const wordCountMap = {
+  short: "300-500 words",
+  medium: "500-800 words",
+  long: "800-1200 words",
+  detailed: "1200+ words",
+};
+
+const subjectContext = {
+  general: "",
+  cs: "This is a Computer Science/IT assignment. Use technical terminology, include code examples where relevant, explain algorithms and data structures clearly.",
+  business: "This is a Business/Management assignment. Use business terminology, include real world examples, reference management theories and frameworks.",
+  english: "This is an English/Literature assignment. Focus on language, grammar, literary devices, writing style and critical analysis.",
+  islamic: "This is an Islamic Studies assignment. Reference Quran verses, Hadith and Islamic scholars where appropriate. Be respectful and accurate.",
+  science: "This is a Science assignment. Include scientific facts, experiments, formulas in text form and proper scientific terminology.",
+};
+
 export async function POST(req) {
   try {
     const session = await auth();
-    const { question, format, title, dueDate } = await req.json();
+    const { question, format, title, dueDate, wordCount, citationStyle, subject, language, studentDetails } = await req.json();
 
     if (!question || !format) {
       return NextResponse.json({ error: "Question and format are required" }, { status: 400 });
@@ -58,17 +74,42 @@ export async function POST(req) {
 
 Assignment: ${question}
 
-Provide a well-structured, detailed response with proper headings, explanations, and examples where needed. Format using markdown with # for main headings and ## for subheadings.`;
+${studentDetails?.name ? `Student: ${studentDetails.name}` : ""}
+${studentDetails?.courseName ? `Course: ${studentDetails.courseName}` : ""}
+
+${subjectContext[subject] || ""}
+
+Follow these formatting rules:
+- ${language === "urdu" ? "Write the ENTIRE response in Urdu language using Urdu script. All headings, content and references must be in Urdu." : "Write in clear professional English"}
+- Use # for main headings and ## for subheadings and ### for sub-subheadings
+- Write approximately ${wordCountMap[wordCount] || "500-800 words"}
+- Write detailed, accurate and well-structured responses
+- Include relevant examples and explanations
+- For diagrams use ASCII art. Examples:
+  Flowchart: [Start] --> [Process] --> [Decision] --> [End]
+  Table:
+  | Column 1 | Column 2 | Column 3 |
+  |----------|----------|----------|
+  | Data 1   | Data 2   | Data 3   |
+  Tree:
+  Root
+  +-- Child 1
+  |   +-- Grandchild 1
+  +-- Child 2
+- For mathematical equations write them clearly in text form
+- For code always include comments explaining each step
+- Make the response comprehensive enough to score full marks
+${citationStyle && citationStyle !== "none" ? `- At the end always add a ## References section with at least 3 proper ${citationStyle} format citations that are real and relevant to the topic` : ""}`;
 
     const content = await generateContent(prompt);
 
     let buffer;
     const fileTitle = title || "Assignment";
 
-    if (format === "word") buffer = await generateWord(content, fileTitle);
-    else if (format === "excel") buffer = await generateExcel(content, fileTitle);
-    else if (format === "pptx") buffer = await generatePPTX(content, fileTitle);
-    else buffer = await generatePDF(content, fileTitle);
+    if (format === "word") buffer = await generateWord(content, fileTitle, studentDetails);
+    else if (format === "excel") buffer = await generateExcel(content, fileTitle, studentDetails);
+    else if (format === "pptx") buffer = await generatePPTX(content, fileTitle, studentDetails);
+    else buffer = await generatePDF(content, fileTitle, studentDetails);
 
     const response = new NextResponse(buffer, {
       headers: {
@@ -101,10 +142,9 @@ Provide a well-structured, detailed response with proper headings, explanations,
         });
       }
     } else {
-      // Set cookie to track anonymous usage
       const anonUsed = parseInt(cookieStore.get("anon_generations")?.value || "0");
       response.cookies.set("anon_generations", String(anonUsed + 1), {
-        maxAge: 60 * 60 * 24 * 30, // 30 days
+        maxAge: 60 * 60 * 24 * 30,
         httpOnly: true,
       });
     }

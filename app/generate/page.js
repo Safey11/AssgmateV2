@@ -10,6 +10,28 @@ const FORMATS = [
   { id: "pptx", label: "PowerPoint", icon: "📽️", ext: ".pptx" },
 ];
 
+const WORD_COUNTS = [
+  { id: "short", label: "Short", words: "300-500" },
+  { id: "medium", label: "Medium", words: "500-800" },
+  { id: "long", label: "Long", words: "800-1200" },
+  { id: "detailed", label: "Detailed", words: "1200+" },
+];
+
+const SUBJECTS = [
+  { id: "general", label: "General", icon: "📚" },
+  { id: "cs", label: "CS/IT", icon: "💻" },
+  { id: "business", label: "Business", icon: "📊" },
+  { id: "english", label: "English", icon: "✍️" },
+  { id: "islamic", label: "Islamic", icon: "☪️" },
+  { id: "science", label: "Science", icon: "🔬" },
+];
+
+const CITATION_STYLES = [
+  { id: "none", label: "None", desc: "No references" },
+  { id: "APA", label: "APA", desc: "Most common" },
+  { id: "Harvard", label: "Harvard", desc: "UK/Aus style" },
+];
+
 const FREE_LIMIT = 5;
 
 export default function GeneratePage() {
@@ -17,6 +39,14 @@ export default function GeneratePage() {
   const [title, setTitle] = useState("");
   const [format, setFormat] = useState("word");
   const [dueDate, setDueDate] = useState("");
+  const [wordCount, setWordCount] = useState("medium");
+  const [subject, setSubject] = useState("general");
+  const [citationStyle, setCitationStyle] = useState("APA");
+  const [language, setLanguage] = useState("english");
+  const [studentName, setStudentName] = useState("");
+  const [rollNumber, setRollNumber] = useState("");
+  const [courseName, setCourseName] = useState("");
+  const [instructorName, setInstructorName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [uploadingPdf, setUploadingPdf] = useState(false);
@@ -73,7 +103,23 @@ export default function GeneratePage() {
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question, format, title, dueDate: dueDate || null }),
+        body: JSON.stringify({
+          question,
+          format,
+          title,
+          dueDate: dueDate || null,
+          wordCount,
+          citationStyle,
+          subject,
+          language,
+          studentDetails: {
+            name: studentName,
+            rollNumber,
+            courseName,
+            instructorName,
+            date: new Date().toLocaleDateString("en-PK"),
+          },
+        }),
       });
 
       if (res.status === 403) {
@@ -242,7 +288,79 @@ export default function GeneratePage() {
             />
           </div>
 
-          {/* Due Date - only for logged in users */}
+          {/* Subject */}
+          <div>
+            <label className="text-sm text-white/60 mb-3 block">Subject Area</label>
+            <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+              {SUBJECTS.map((s) => (
+                <button
+                  key={s.id}
+                  onClick={() => setSubject(s.id)}
+                  className={`flex flex-col items-center gap-1 p-3 rounded-xl border transition ${
+                    subject === s.id
+                      ? "border-violet-500 bg-violet-500/10 text-white"
+                      : "border-white/10 bg-white/5 text-white/50 hover:border-white/30 hover:text-white"
+                  }`}
+                >
+                  <span className="text-lg">{s.icon}</span>
+                  <span className="text-xs font-medium">{s.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Student Details */}
+          {isLoggedIn && (
+            <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+              <p className="text-sm text-white/60 mb-3 font-medium">
+                Student Details <span className="text-white/30">(optional — appears on document header)</span>
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs text-white/40 mb-1 block">Student Name</label>
+                  <input
+                    type="text"
+                    value={studentName}
+                    onChange={(e) => setStudentName(e.target.value)}
+                    placeholder="Your full name"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm outline-none focus:border-violet-500 transition placeholder:text-white/20"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-white/40 mb-1 block">Roll Number</label>
+                  <input
+                    type="text"
+                    value={rollNumber}
+                    onChange={(e) => setRollNumber(e.target.value)}
+                    placeholder="e.g. 2021-CS-45"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm outline-none focus:border-violet-500 transition placeholder:text-white/20"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-white/40 mb-1 block">Course Name</label>
+                  <input
+                    type="text"
+                    value={courseName}
+                    onChange={(e) => setCourseName(e.target.value)}
+                    placeholder="e.g. Data Structures"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm outline-none focus:border-violet-500 transition placeholder:text-white/20"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-white/40 mb-1 block">Instructor Name</label>
+                  <input
+                    type="text"
+                    value={instructorName}
+                    onChange={(e) => setInstructorName(e.target.value)}
+                    placeholder="e.g. Sir Ahmed"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm outline-none focus:border-violet-500 transition placeholder:text-white/20"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Due Date */}
           {isLoggedIn && (
             <div>
               <label className="text-sm text-white/60 mb-2 block">
@@ -284,6 +402,72 @@ export default function GeneratePage() {
               rows={8}
               className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm outline-none focus:border-violet-500 transition placeholder:text-white/20 resize-none"
             />
+          </div>
+
+          {/* Word Count */}
+          <div>
+            <label className="text-sm text-white/60 mb-3 block">Approximate Word Count</label>
+            <div className="grid grid-cols-4 gap-3">
+              {WORD_COUNTS.map((w) => (
+                <button
+                  key={w.id}
+                  onClick={() => setWordCount(w.id)}
+                  className={`flex flex-col items-center gap-1 p-3 rounded-xl border transition ${
+                    wordCount === w.id
+                      ? "border-violet-500 bg-violet-500/10 text-white"
+                      : "border-white/10 bg-white/5 text-white/50 hover:border-white/30 hover:text-white"
+                  }`}
+                >
+                  <span className="text-sm font-medium">{w.label}</span>
+                  <span className="text-xs text-white/30">{w.words}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Citation Style */}
+          <div>
+            <label className="text-sm text-white/60 mb-3 block">Citation Style</label>
+            <div className="grid grid-cols-3 gap-3">
+              {CITATION_STYLES.map((c) => (
+                <button
+                  key={c.id}
+                  onClick={() => setCitationStyle(c.id)}
+                  className={`flex flex-col items-center gap-1 p-3 rounded-xl border transition ${
+                    citationStyle === c.id
+                      ? "border-violet-500 bg-violet-500/10 text-white"
+                      : "border-white/10 bg-white/5 text-white/50 hover:border-white/30 hover:text-white"
+                  }`}
+                >
+                  <span className="text-sm font-medium">{c.label}</span>
+                  <span className="text-xs text-white/30">{c.desc}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Language */}
+          <div>
+            <label className="text-sm text-white/60 mb-3 block">Language</label>
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { id: "english", label: "English", icon: "🇬🇧" },
+                { id: "urdu", label: "اردو", icon: "🇵🇰" },
+              ].map((l) => (
+                <button
+                  key={l.id}
+                  onClick={() => setLanguage(l.id)}
+                  className={`flex items-center justify-center gap-2 p-3 rounded-xl border transition ${
+                    language === l.id
+                      ? "border-violet-500 bg-violet-500/10 text-white"
+                      : "border-white/10 bg-white/5 text-white/50 hover:border-white/30 hover:text-white"
+                  }`}
+                >
+                  <span>{l.icon}</span>
+                  <span className="text-sm font-medium">{l.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Format */}
