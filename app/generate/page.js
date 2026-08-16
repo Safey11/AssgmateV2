@@ -56,6 +56,9 @@ export default function GeneratePage() {
   const [showSignupPrompt, setShowSignupPrompt] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const fileRef = useRef(null);
+  const [imageName, setImageName] = useState(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const imageRef = useRef(null);
 
   useEffect(() => {
     fetch("/api/auth/session")
@@ -92,6 +95,34 @@ export default function GeneratePage() {
       setPdfName(null);
     } finally {
       setUploadingPdf(false);
+    }
+  }
+
+  async function handleImageUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      setError("Only JPG, PNG, WEBP images supported");
+      return;
+    }
+
+    setImageName(file.name);
+    setUploadingImage(true);
+    setError(null);
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
+      const res = await fetch("/api/parse-image", { method: "POST", body: formData });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to analyze image");
+      setQuestion(data.text);
+    } catch (err) {
+      setError(err.message);
+      setImageName(null);
+    } finally {
+      setUploadingImage(false);
     }
   }
 
@@ -237,13 +268,12 @@ export default function GeneratePage() {
 
           {/* Generations Counter */}
           {isLoggedIn && user && (
-            <div className={`shrink-0 px-4 py-3 rounded-xl border ${
-              isFreePlan && generationsLeft <= 1
-                ? "bg-red-500/10 border-red-500/20"
-                : isFreePlan
+            <div className={`shrink-0 px-4 py-3 rounded-xl border ${isFreePlan && generationsLeft <= 1
+              ? "bg-red-500/10 border-red-500/20"
+              : isFreePlan
                 ? "bg-white/5 border-white/10"
                 : "bg-violet-500/10 border-violet-500/20"
-            }`}>
+              }`}>
               {isFreePlan ? (
                 <>
                   <p className={`text-lg font-bold ${generationsLeft <= 1 ? "text-red-400" : "text-white"}`}>
@@ -296,11 +326,10 @@ export default function GeneratePage() {
                 <button
                   key={s.id}
                   onClick={() => setSubject(s.id)}
-                  className={`flex flex-col items-center gap-1 p-3 rounded-xl border transition ${
-                    subject === s.id
-                      ? "border-violet-500 bg-violet-500/10 text-white"
-                      : "border-white/10 bg-white/5 text-white/50 hover:border-white/30 hover:text-white"
-                  }`}
+                  className={`flex flex-col items-center gap-1 p-3 rounded-xl border transition ${subject === s.id
+                    ? "border-violet-500 bg-violet-500/10 text-white"
+                    : "border-white/10 bg-white/5 text-white/50 hover:border-white/30 hover:text-white"
+                    }`}
                 >
                   <span className="text-lg">{s.icon}</span>
                   <span className="text-xs font-medium">{s.label}</span>
@@ -377,16 +406,26 @@ export default function GeneratePage() {
           )}
 
           {/* Question */}
+          {/* Question */}
           <div>
-            <div className="flex items-center justify-between mb-2 gap-2">
+            <div className="flex items-center justify-between mb-2 gap-2 flex-wrap">
               <label className="text-sm text-white/60">Assignment Question</label>
-              <button
-                onClick={() => fileRef.current.click()}
-                disabled={uploadingPdf}
-                className="flex items-center gap-1 text-xs bg-white/5 border border-white/10 hover:border-violet-500/40 px-3 py-1.5 rounded-lg transition text-white/50 hover:text-white shrink-0"
-              >
-                📎 {uploadingPdf ? "Reading..." : pdfName ? pdfName.slice(0, 10) + "..." : "Upload PDF"}
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => fileRef.current.click()}
+                  disabled={uploadingPdf || uploadingImage}
+                  className="flex items-center gap-1 text-xs bg-white/5 border border-white/10 hover:border-violet-500/40 px-3 py-1.5 rounded-lg transition text-white/50 hover:text-white shrink-0"
+                >
+                  📄 {uploadingPdf ? "Reading..." : pdfName ? pdfName.slice(0, 8) + "..." : "Upload PDF"}
+                </button>
+                <button
+                  onClick={() => imageRef.current.click()}
+                  disabled={uploadingImage || uploadingPdf}
+                  className="flex items-center gap-1 text-xs bg-white/5 border border-white/10 hover:border-violet-500/40 px-3 py-1.5 rounded-lg transition text-white/50 hover:text-white shrink-0"
+                >
+                  🖼️ {uploadingImage ? "Analyzing..." : imageName ? imageName.slice(0, 8) + "..." : "Upload Image"}
+                </button>
+              </div>
               <input
                 ref={fileRef}
                 type="file"
@@ -394,35 +433,28 @@ export default function GeneratePage() {
                 onChange={handlePdfUpload}
                 className="hidden"
               />
+              <input
+                ref={imageRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={handleImageUpload}
+                className="hidden"
+              />
             </div>
+
+            {(uploadingPdf || uploadingImage) && (
+              <div className="bg-violet-500/10 border border-violet-500/20 rounded-xl px-4 py-3 mb-3 text-sm text-violet-400 animate-pulse">
+                {uploadingPdf ? "📄 Reading PDF..." : "🖼️ AI is analyzing your image..."}
+              </div>
+            )}
+
             <textarea
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
-              placeholder="Paste your assignment question here or upload a PDF above..."
+              placeholder="Paste your assignment question here, upload a PDF, or upload an image of your assignment..."
               rows={8}
               className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm outline-none focus:border-violet-500 transition placeholder:text-white/20 resize-none"
             />
-          </div>
-
-          {/* Word Count */}
-          <div>
-            <label className="text-sm text-white/60 mb-3 block">Approximate Word Count</label>
-            <div className="grid grid-cols-4 gap-3">
-              {WORD_COUNTS.map((w) => (
-                <button
-                  key={w.id}
-                  onClick={() => setWordCount(w.id)}
-                  className={`flex flex-col items-center gap-1 p-3 rounded-xl border transition ${
-                    wordCount === w.id
-                      ? "border-violet-500 bg-violet-500/10 text-white"
-                      : "border-white/10 bg-white/5 text-white/50 hover:border-white/30 hover:text-white"
-                  }`}
-                >
-                  <span className="text-sm font-medium">{w.label}</span>
-                  <span className="text-xs text-white/30">{w.words}</span>
-                </button>
-              ))}
-            </div>
           </div>
 
           {/* Citation Style */}
@@ -433,11 +465,10 @@ export default function GeneratePage() {
                 <button
                   key={c.id}
                   onClick={() => setCitationStyle(c.id)}
-                  className={`flex flex-col items-center gap-1 p-3 rounded-xl border transition ${
-                    citationStyle === c.id
-                      ? "border-violet-500 bg-violet-500/10 text-white"
-                      : "border-white/10 bg-white/5 text-white/50 hover:border-white/30 hover:text-white"
-                  }`}
+                  className={`flex flex-col items-center gap-1 p-3 rounded-xl border transition ${citationStyle === c.id
+                    ? "border-violet-500 bg-violet-500/10 text-white"
+                    : "border-white/10 bg-white/5 text-white/50 hover:border-white/30 hover:text-white"
+                    }`}
                 >
                   <span className="text-sm font-medium">{c.label}</span>
                   <span className="text-xs text-white/30">{c.desc}</span>
@@ -457,11 +488,10 @@ export default function GeneratePage() {
                 <button
                   key={l.id}
                   onClick={() => setLanguage(l.id)}
-                  className={`flex items-center justify-center gap-2 p-3 rounded-xl border transition ${
-                    language === l.id
-                      ? "border-violet-500 bg-violet-500/10 text-white"
-                      : "border-white/10 bg-white/5 text-white/50 hover:border-white/30 hover:text-white"
-                  }`}
+                  className={`flex items-center justify-center gap-2 p-3 rounded-xl border transition ${language === l.id
+                    ? "border-violet-500 bg-violet-500/10 text-white"
+                    : "border-white/10 bg-white/5 text-white/50 hover:border-white/30 hover:text-white"
+                    }`}
                 >
                   <span>{l.icon}</span>
                   <span className="text-sm font-medium">{l.label}</span>
@@ -478,11 +508,10 @@ export default function GeneratePage() {
                 <button
                   key={f.id}
                   onClick={() => setFormat(f.id)}
-                  className={`flex flex-col items-center gap-2 p-3 md:p-4 rounded-xl border transition ${
-                    format === f.id
-                      ? "border-violet-500 bg-violet-500/10 text-white"
-                      : "border-white/10 bg-white/5 text-white/50 hover:border-white/30 hover:text-white"
-                  }`}
+                  className={`flex flex-col items-center gap-2 p-3 md:p-4 rounded-xl border transition ${format === f.id
+                    ? "border-violet-500 bg-violet-500/10 text-white"
+                    : "border-white/10 bg-white/5 text-white/50 hover:border-white/30 hover:text-white"
+                    }`}
                 >
                   <span className="text-2xl">{f.icon}</span>
                   <span className="text-sm font-medium">{f.label}</span>
