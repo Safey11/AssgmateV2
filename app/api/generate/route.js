@@ -80,26 +80,52 @@ ${studentDetails?.courseName ? `Course: ${studentDetails.courseName}` : ""}
 ${subjectContext[subject] || ""}
 
 Follow these formatting rules:
-- ${language === "urdu" ? "Write the ENTIRE response in Urdu language using Urdu script. All headings, content and references must be in Urdu." : "Write in clear professional English"}
+- ${language === "urdu" ? "Write the ENTIRE response in Urdu language using Urdu script" : "Write in clear professional English"}
 - Use # for main headings and ## for subheadings and ### for sub-subheadings
 - Write approximately ${wordCountMap[wordCount] || "500-800 words"}
 - Write detailed, accurate and well-structured responses
 - Include relevant examples and explanations
-- For diagrams use ASCII art. Examples:
-  Flowchart: [Start] --> [Process] --> [Decision] --> [End]
-  Table:
-  | Column 1 | Column 2 | Column 3 |
-  |----------|----------|----------|
-  | Data 1   | Data 2   | Data 3   |
-  Tree:
-  Root
-  +-- Child 1
-  |   +-- Grandchild 1
-  +-- Child 2
-- For mathematical equations write them clearly in text form
+- For ANY diagram, flowchart, UML, ER diagram, or visual representation use Mermaid diagram syntax wrapped in \`\`\`mermaid code blocks. Examples:
+
+  Flowchart:
+  \`\`\`mermaid
+  flowchart TD
+    A[Start] --> B{Decision}
+    B -->|Yes| C[Process]
+    B -->|No| D[End]
+    C --> D
+  \`\`\`
+
+  Sequence Diagram:
+  \`\`\`mermaid
+  sequenceDiagram
+    Client->>Server: Request
+    Server-->>Client: Response
+  \`\`\`
+
+  Class Diagram:
+  \`\`\`mermaid
+  classDiagram
+    class Animal {
+      +String name
+      +makeSound()
+    }
+    class Dog {
+      +fetch()
+    }
+    Animal <|-- Dog
+  \`\`\`
+
+  ER Diagram:
+  \`\`\`mermaid
+  erDiagram
+    STUDENT ||--o{ ENROLLMENT : has
+    COURSE ||--o{ ENROLLMENT : has
+  \`\`\`
+
 - For code always include comments explaining each step
 - Make the response comprehensive enough to score full marks
-${citationStyle && citationStyle !== "none" ? `- At the end always add a ## References section with at least 3 proper ${citationStyle} format citations that are real and relevant to the topic` : ""}`;
+${citationStyle && citationStyle !== "none" ? `- At the end always add a ## References section with at least 3 proper ${citationStyle} format citations` : ""}`;
 
     const content = await generateContent(prompt);
 

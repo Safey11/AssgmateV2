@@ -10,11 +10,13 @@
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
+    "@mermaid-js/mermaid-cli": "^11.16.0",
     "@uploadthing/react": "^7.3.3",
     "bcryptjs": "^3.0.3",
     "docx": "^9.7.1",
     "exceljs": "^4.4.0",
     "groq-sdk": "^1.2.1",
+    "mermaid": "^11.16.1",
     "mongoose": "^9.6.3",
     "next": "^16.2.7",
     "next-auth": "^5.0.0-beta.31",
