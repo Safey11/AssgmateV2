@@ -10,54 +10,29 @@ const FORMATS = [
   { id: "pptx", label: "PowerPoint", icon: "📽️", ext: ".pptx" },
 ];
 
-const WORD_COUNTS = [
-  { id: "short", label: "Short", words: "300-500" },
-  { id: "medium", label: "Medium", words: "500-800" },
-  { id: "long", label: "Long", words: "800-1200" },
-  { id: "detailed", label: "Detailed", words: "1200+" },
-];
-
-const SUBJECTS = [
-  { id: "general", label: "General", icon: "📚" },
-  { id: "cs", label: "CS/IT", icon: "💻" },
-  { id: "business", label: "Business", icon: "📊" },
-  { id: "english", label: "English", icon: "✍️" },
-  { id: "islamic", label: "Islamic", icon: "☪️" },
-  { id: "science", label: "Science", icon: "🔬" },
-];
-
-const CITATION_STYLES = [
-  { id: "none", label: "None", desc: "No references" },
-  { id: "APA", label: "APA", desc: "Most common" },
-  { id: "Harvard", label: "Harvard", desc: "UK/Aus style" },
-];
-
 const FREE_LIMIT = 5;
 
 export default function GeneratePage() {
   const [question, setQuestion] = useState("");
   const [title, setTitle] = useState("");
   const [format, setFormat] = useState("word");
-  const [dueDate, setDueDate] = useState("");
-  const [wordCount, setWordCount] = useState("medium");
-  const [subject, setSubject] = useState("general");
-  const [citationStyle, setCitationStyle] = useState("APA");
-  const [language, setLanguage] = useState("english");
-  const [studentName, setStudentName] = useState("");
-  const [rollNumber, setRollNumber] = useState("");
-  const [courseName, setCourseName] = useState("");
-  const [instructorName, setInstructorName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [uploadingPdf, setUploadingPdf] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [pdfName, setPdfName] = useState(null);
+  const [imageName, setImageName] = useState(null);
   const [user, setUser] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(null);
   const [showSignupPrompt, setShowSignupPrompt] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [studentName, setStudentName] = useState("");
+  const [rollNumber, setRollNumber] = useState("");
+  const [courseName, setCourseName] = useState("");
+  const [instructorName, setInstructorName] = useState("");
+  const [dueDate, setDueDate] = useState("");
   const fileRef = useRef(null);
-  const [imageName, setImageName] = useState(null);
-  const [uploadingImage, setUploadingImage] = useState(false);
   const imageRef = useRef(null);
 
   useEffect(() => {
@@ -79,7 +54,7 @@ export default function GeneratePage() {
 
   async function handlePdfUpload(e) {
     const file = e.target.files[0];
-    if (!file || file.type !== "application/pdf") return;
+    if (!file) return;
     setPdfName(file.name);
     setUploadingPdf(true);
     setError(null);
@@ -101,13 +76,6 @@ export default function GeneratePage() {
   async function handleImageUpload(e) {
     const file = e.target.files[0];
     if (!file) return;
-
-    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
-    if (!allowedTypes.includes(file.type)) {
-      setError("Only JPG, PNG, WEBP images supported");
-      return;
-    }
-
     setImageName(file.name);
     setUploadingImage(true);
     setError(null);
@@ -139,10 +107,10 @@ export default function GeneratePage() {
           format,
           title,
           dueDate: dueDate || null,
-          wordCount,
-          citationStyle,
-          subject,
-          language,
+          wordCount: "medium",
+          citationStyle: "APA",
+          subject: "general",
+          language: "english",
           studentDetails: {
             name: studentName,
             rollNumber,
@@ -155,11 +123,8 @@ export default function GeneratePage() {
 
       if (res.status === 403) {
         const data = await res.json();
-        if (!isLoggedIn) {
-          setShowSignupPrompt(true);
-        } else {
-          setError(data.error);
-        }
+        if (!isLoggedIn) setShowSignupPrompt(true);
+        else setError(data.error);
         return;
       }
 
@@ -189,65 +154,51 @@ export default function GeneratePage() {
     <main className="min-h-screen bg-[#0a0a0a] text-white">
 
       {/* Navbar */}
-      <nav className="flex items-center justify-between px-6 py-5 border-b border-white/10 relative">
-        <Link href="/" className="text-xl font-bold tracking-tight">Assign<span className="text-violet-400">Mate</span></Link>
-
+      <nav className="flex items-center justify-between px-6 py-4 border-b border-white/10 relative">
+        <Link href="/" className="text-xl font-bold tracking-tight">
+          Assign<span className="text-violet-400">Mate</span>
+        </Link>
         <div className="hidden md:flex items-center gap-6">
+          <Link href="/chat" className="text-sm bg-violet-600 hover:bg-violet-500 px-4 py-2 rounded-lg transition">
+            ✨ Chat Mode
+          </Link>
           {isLoggedIn ? (
             <>
-              <Link href="/dashboard" className="text-sm text-white/60 hover:text-white transition">Dashboard</Link>
               <Link href="/history" className="text-sm text-white/60 hover:text-white transition">History</Link>
+              <Link href="/dashboard" className="text-sm text-white/60 hover:text-white transition">Dashboard</Link>
             </>
           ) : (
-            <>
-              <Link href="/pricing" className="text-sm text-white/60 hover:text-white transition">Pricing</Link>
-              <Link href="/login" className="text-sm bg-violet-600 hover:bg-violet-500 px-4 py-2 rounded-lg transition">Login</Link>
-            </>
+            <Link href="/login" className="text-sm text-white/60 hover:text-white transition">Login</Link>
           )}
         </div>
-
         <button onClick={() => setMenuOpen(!menuOpen)} className="md:hidden flex flex-col gap-1.5 p-2">
           <span className={`block w-6 h-0.5 bg-white transition-all ${menuOpen ? "rotate-45 translate-y-2" : ""}`} />
           <span className={`block w-6 h-0.5 bg-white transition-all ${menuOpen ? "opacity-0" : ""}`} />
           <span className={`block w-6 h-0.5 bg-white transition-all ${menuOpen ? "-rotate-45 -translate-y-2" : ""}`} />
         </button>
-
         {menuOpen && (
           <div className="absolute top-full left-0 right-0 bg-[#111] border-b border-white/10 flex flex-col px-6 py-4 gap-4 md:hidden z-50">
-            {isLoggedIn ? (
-              <>
-                <Link href="/dashboard" onClick={() => setMenuOpen(false)} className="text-sm text-white/60 hover:text-white transition">Dashboard</Link>
-                <Link href="/history" onClick={() => setMenuOpen(false)} className="text-sm text-white/60 hover:text-white transition">History</Link>
-              </>
-            ) : (
-              <>
-                <Link href="/pricing" onClick={() => setMenuOpen(false)} className="text-sm text-white/60 hover:text-white transition">Pricing</Link>
-                <Link href="/login" onClick={() => setMenuOpen(false)} className="text-sm bg-violet-600 px-4 py-2 rounded-lg transition text-center">Login</Link>
-              </>
-            )}
+            <Link href="/chat" onClick={() => setMenuOpen(false)} className="text-sm bg-violet-600 px-4 py-2 rounded-lg text-center">✨ Chat Mode</Link>
+            <Link href="/history" onClick={() => setMenuOpen(false)} className="text-sm text-white/60">History</Link>
+            <Link href="/dashboard" onClick={() => setMenuOpen(false)} className="text-sm text-white/60">Dashboard</Link>
           </div>
         )}
       </nav>
 
-      <div className="max-w-3xl mx-auto px-4 md:px-6 py-8 md:py-12">
+      <div className="max-w-2xl mx-auto px-4 py-8">
 
-        {/* Signup Prompt Modal */}
+        {/* Signup Prompt */}
         {showSignupPrompt && (
           <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center px-4">
             <div className="bg-[#111] border border-violet-500/30 rounded-2xl p-8 max-w-md w-full text-center">
               <span className="text-5xl">🎉</span>
               <h2 className="text-2xl font-bold mt-4 mb-2">Loved it?</h2>
-              <p className="text-white/50 mb-6">
-                Create a free account to unlock 5 free generations every month, save your history, and access all formats.
-              </p>
+              <p className="text-white/50 mb-6">Create a free account to unlock 5 free generations and save your history.</p>
               <div className="flex flex-col gap-3">
                 <Link href="/register" className="bg-violet-600 hover:bg-violet-500 py-3 rounded-xl font-semibold transition">
                   Create Free Account
                 </Link>
-                <button
-                  onClick={() => setShowSignupPrompt(false)}
-                  className="text-white/40 text-sm hover:text-white transition"
-                >
+                <button onClick={() => setShowSignupPrompt(false)} className="text-white/40 text-sm hover:text-white transition">
                   Maybe later
                 </button>
               </div>
@@ -255,270 +206,153 @@ export default function GeneratePage() {
           </div>
         )}
 
-        {/* Header + Counter */}
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8">
+        {/* Header */}
+        <div className="flex items-start justify-between mb-8">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold">Generate Assignment ✨</h1>
-            <p className="text-white/40 mt-2 text-sm">
-              {isLoggedIn === false
-                ? "Try it free — no account needed for your first generation."
-                : "Paste your question, pick a format, download your file."}
-            </p>
+            <h1 className="text-2xl font-bold">Quick Generate ⚡</h1>
+            <p className="text-white/40 text-sm mt-1">Fill in details and download instantly. For conversation try <Link href="/chat" className="text-violet-400 hover:underline">Chat Mode</Link>.</p>
           </div>
-
-          {/* Generations Counter */}
-          {isLoggedIn && user && (
-            <div className={`shrink-0 px-4 py-3 rounded-xl border ${isFreePlan && generationsLeft <= 1
-              ? "bg-red-500/10 border-red-500/20"
-              : isFreePlan
-                ? "bg-white/5 border-white/10"
-                : "bg-violet-500/10 border-violet-500/20"
-              }`}>
-              {isFreePlan ? (
-                <>
-                  <p className={`text-lg font-bold ${generationsLeft <= 1 ? "text-red-400" : "text-white"}`}>
-                    {generationsLeft} left
-                  </p>
-                  <p className="text-white/40 text-xs">of {totalAllowed} free</p>
-                  {generationsLeft <= 1 && (
-                    <Link href="/pricing" className="text-xs text-violet-400 hover:underline mt-1 block">
-                      Upgrade →
-                    </Link>
-                  )}
-                </>
-              ) : (
-                <>
-                  <p className="text-lg font-bold text-violet-400">∞</p>
-                  <p className="text-white/40 text-xs">Pro Plan</p>
-                </>
-              )}
+          {isLoggedIn && user && isFreePlan && (
+            <div className={`shrink-0 px-3 py-2 rounded-xl border text-center ${
+              generationsLeft <= 1 ? "bg-red-500/10 border-red-500/20" : "bg-white/5 border-white/10"
+            }`}>
+              <p className={`text-base font-bold ${generationsLeft <= 1 ? "text-red-400" : ""}`}>{generationsLeft}</p>
+              <p className="text-white/40 text-xs">of {totalAllowed} left</p>
             </div>
           )}
-
-          {/* Anonymous badge */}
-          {isLoggedIn === false && (
-            <div className="shrink-0 px-4 py-3 rounded-xl border bg-violet-500/10 border-violet-500/20">
-              <p className="text-sm font-semibold text-violet-400">🎁 1 Free Try</p>
-              <p className="text-white/40 text-xs">No account needed</p>
+          {isLoggedIn && user && !isFreePlan && (
+            <div className="shrink-0 px-3 py-2 rounded-xl border bg-violet-500/10 border-violet-500/20 text-center">
+              <p className="text-base font-bold text-violet-400">∞</p>
+              <p className="text-white/40 text-xs">Pro</p>
             </div>
           )}
         </div>
 
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-5">
 
           {/* Title */}
           <div>
-            <label className="text-sm text-white/60 mb-2 block">Assignment Title</label>
+            <label className="text-sm text-white/50 mb-1.5 block">Assignment Title <span className="text-white/20">(optional)</span></label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Data Structures Assignment 1"
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm outline-none focus:border-violet-500 transition placeholder:text-white/20"
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm outline-none focus:border-violet-500/50 transition placeholder:text-white/20"
             />
           </div>
 
-          {/* Subject */}
-          <div>
-            <label className="text-sm text-white/60 mb-3 block">Subject Area</label>
-            <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
-              {SUBJECTS.map((s) => (
-                <button
-                  key={s.id}
-                  onClick={() => setSubject(s.id)}
-                  className={`flex flex-col items-center gap-1 p-3 rounded-xl border transition ${subject === s.id
-                    ? "border-violet-500 bg-violet-500/10 text-white"
-                    : "border-white/10 bg-white/5 text-white/50 hover:border-white/30 hover:text-white"
-                    }`}
-                >
-                  <span className="text-lg">{s.icon}</span>
-                  <span className="text-xs font-medium">{s.label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Student Details */}
-          {isLoggedIn && (
-            <div className="bg-white/5 border border-white/10 rounded-xl p-4">
-              <p className="text-sm text-white/60 mb-3 font-medium">
-                Student Details <span className="text-white/30">(optional — appears on document header)</span>
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs text-white/40 mb-1 block">Student Name</label>
-                  <input
-                    type="text"
-                    value={studentName}
-                    onChange={(e) => setStudentName(e.target.value)}
-                    placeholder="Your full name"
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm outline-none focus:border-violet-500 transition placeholder:text-white/20"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs text-white/40 mb-1 block">Roll Number</label>
-                  <input
-                    type="text"
-                    value={rollNumber}
-                    onChange={(e) => setRollNumber(e.target.value)}
-                    placeholder="e.g. 2021-CS-45"
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm outline-none focus:border-violet-500 transition placeholder:text-white/20"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs text-white/40 mb-1 block">Course Name</label>
-                  <input
-                    type="text"
-                    value={courseName}
-                    onChange={(e) => setCourseName(e.target.value)}
-                    placeholder="e.g. Data Structures"
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm outline-none focus:border-violet-500 transition placeholder:text-white/20"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs text-white/40 mb-1 block">Instructor Name</label>
-                  <input
-                    type="text"
-                    value={instructorName}
-                    onChange={(e) => setInstructorName(e.target.value)}
-                    placeholder="e.g. Sir Ahmed"
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm outline-none focus:border-violet-500 transition placeholder:text-white/20"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Due Date */}
-          {isLoggedIn && (
-            <div>
-              <label className="text-sm text-white/60 mb-2 block">
-                Due Date <span className="text-white/30">(optional — we'll remind you 1 day before)</span>
-              </label>
-              <input
-                type="date"
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
-                min={new Date().toISOString().split("T")[0]}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm outline-none focus:border-violet-500 transition text-white/70"
-              />
-            </div>
-          )}
-
-          {/* Question */}
           {/* Question */}
           <div>
-            <div className="flex items-center justify-between mb-2 gap-2 flex-wrap">
-              <label className="text-sm text-white/60">Assignment Question</label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-sm text-white/50">Assignment Question</label>
               <div className="flex gap-2">
                 <button
                   onClick={() => fileRef.current.click()}
                   disabled={uploadingPdf || uploadingImage}
-                  className="flex items-center gap-1 text-xs bg-white/5 border border-white/10 hover:border-violet-500/40 px-3 py-1.5 rounded-lg transition text-white/50 hover:text-white shrink-0"
+                  className="text-xs text-white/40 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 px-2.5 py-1 rounded-lg transition"
                 >
-                  📄 {uploadingPdf ? "Reading..." : pdfName ? pdfName.slice(0, 8) + "..." : "Upload PDF"}
+                  {uploadingPdf ? "Reading..." : "📄 PDF"}
                 </button>
                 <button
                   onClick={() => imageRef.current.click()}
-                  disabled={uploadingImage || uploadingPdf}
-                  className="flex items-center gap-1 text-xs bg-white/5 border border-white/10 hover:border-violet-500/40 px-3 py-1.5 rounded-lg transition text-white/50 hover:text-white shrink-0"
+                  disabled={uploadingPdf || uploadingImage}
+                  className="text-xs text-white/40 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 px-2.5 py-1 rounded-lg transition"
                 >
-                  🖼️ {uploadingImage ? "Analyzing..." : imageName ? imageName.slice(0, 8) + "..." : "Upload Image"}
+                  {uploadingImage ? "Analyzing..." : "🖼️ Image"}
                 </button>
+                <input ref={fileRef} type="file" accept="application/pdf" onChange={handlePdfUpload} className="hidden" />
+                <input ref={imageRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
               </div>
-              <input
-                ref={fileRef}
-                type="file"
-                accept="application/pdf"
-                onChange={handlePdfUpload}
-                className="hidden"
-              />
-              <input
-                ref={imageRef}
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                onChange={handleImageUpload}
-                className="hidden"
-              />
             </div>
-
             {(uploadingPdf || uploadingImage) && (
-              <div className="bg-violet-500/10 border border-violet-500/20 rounded-xl px-4 py-3 mb-3 text-sm text-violet-400 animate-pulse">
-                {uploadingPdf ? "📄 Reading PDF..." : "🖼️ AI is analyzing your image..."}
+              <div className="bg-violet-500/10 border border-violet-500/20 rounded-xl px-4 py-2 mb-2 text-xs text-violet-400 animate-pulse">
+                {uploadingPdf ? "📄 Reading PDF..." : "🖼️ AI analyzing image..."}
               </div>
             )}
-
             <textarea
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
-              placeholder="Paste your assignment question here, upload a PDF, or upload an image of your assignment..."
-              rows={8}
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm outline-none focus:border-violet-500 transition placeholder:text-white/20 resize-none"
+              placeholder="Paste your assignment question here, or upload a PDF/image above..."
+              rows={6}
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm outline-none focus:border-violet-500/50 transition placeholder:text-white/20 resize-none"
             />
-          </div>
-
-          {/* Citation Style */}
-          <div>
-            <label className="text-sm text-white/60 mb-3 block">Citation Style</label>
-            <div className="grid grid-cols-3 gap-3">
-              {CITATION_STYLES.map((c) => (
-                <button
-                  key={c.id}
-                  onClick={() => setCitationStyle(c.id)}
-                  className={`flex flex-col items-center gap-1 p-3 rounded-xl border transition ${citationStyle === c.id
-                    ? "border-violet-500 bg-violet-500/10 text-white"
-                    : "border-white/10 bg-white/5 text-white/50 hover:border-white/30 hover:text-white"
-                    }`}
-                >
-                  <span className="text-sm font-medium">{c.label}</span>
-                  <span className="text-xs text-white/30">{c.desc}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Language */}
-          <div>
-            <label className="text-sm text-white/60 mb-3 block">Language</label>
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                { id: "english", label: "English", icon: "🇬🇧" },
-                { id: "urdu", label: "اردو", icon: "🇵🇰" },
-              ].map((l) => (
-                <button
-                  key={l.id}
-                  onClick={() => setLanguage(l.id)}
-                  className={`flex items-center justify-center gap-2 p-3 rounded-xl border transition ${language === l.id
-                    ? "border-violet-500 bg-violet-500/10 text-white"
-                    : "border-white/10 bg-white/5 text-white/50 hover:border-white/30 hover:text-white"
-                    }`}
-                >
-                  <span>{l.icon}</span>
-                  <span className="text-sm font-medium">{l.label}</span>
-                </button>
-              ))}
-            </div>
           </div>
 
           {/* Format */}
           <div>
-            <label className="text-sm text-white/60 mb-3 block">Output Format</label>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <label className="text-sm text-white/50 mb-1.5 block">Output Format</label>
+            <div className="grid grid-cols-4 gap-2">
               {FORMATS.map((f) => (
                 <button
                   key={f.id}
                   onClick={() => setFormat(f.id)}
-                  className={`flex flex-col items-center gap-2 p-3 md:p-4 rounded-xl border transition ${format === f.id
-                    ? "border-violet-500 bg-violet-500/10 text-white"
-                    : "border-white/10 bg-white/5 text-white/50 hover:border-white/30 hover:text-white"
-                    }`}
+                  className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border transition ${
+                    format === f.id
+                      ? "border-violet-500 bg-violet-500/10 text-white"
+                      : "border-white/10 bg-white/5 text-white/40 hover:border-white/20 hover:text-white"
+                  }`}
                 >
-                  <span className="text-2xl">{f.icon}</span>
-                  <span className="text-sm font-medium">{f.label}</span>
-                  <span className="text-xs text-white/30">{f.ext}</span>
+                  <span className="text-xl">{f.icon}</span>
+                  <span className="text-xs font-medium">{f.label}</span>
+                  <span className="text-xs text-white/20">{f.ext}</span>
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* Advanced Options - collapsed by default */}
+          <div>
+            <button
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              className="flex items-center gap-2 text-sm text-white/40 hover:text-white transition"
+            >
+              <span>{showAdvanced ? "▼" : "▶"}</span>
+              <span>Advanced Options</span>
+              <span className="text-white/20 text-xs">(student details, due date)</span>
+            </button>
+
+            {showAdvanced && (
+              <div className="mt-4 flex flex-col gap-4 p-4 bg-white/3 border border-white/8 rounded-xl">
+                {/* Student Details */}
+                <div>
+                  <p className="text-xs text-white/40 mb-2">Student Details <span className="text-white/20">(appears on document header)</span></p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { label: "Your Name", value: studentName, set: setStudentName, placeholder: "Full name" },
+                      { label: "Roll Number", value: rollNumber, set: setRollNumber, placeholder: "e.g. 2021-CS-45" },
+                      { label: "Course", value: courseName, set: setCourseName, placeholder: "e.g. Data Structures" },
+                      { label: "Instructor", value: instructorName, set: setInstructorName, placeholder: "e.g. Sir Ahmed" },
+                    ].map((field) => (
+                      <div key={field.label}>
+                        <label className="text-xs text-white/30 mb-1 block">{field.label}</label>
+                        <input
+                          type="text"
+                          value={field.value}
+                          onChange={(e) => field.set(e.target.value)}
+                          placeholder={field.placeholder}
+                          className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs outline-none focus:border-violet-500/50 transition placeholder:text-white/15"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Due Date */}
+                {isLoggedIn && (
+                  <div>
+                    <label className="text-xs text-white/40 mb-1 block">Due Date <span className="text-white/20">(we'll remind you 1 day before)</span></label>
+                    <input
+                      type="date"
+                      value={dueDate}
+                      onChange={(e) => setDueDate(e.target.value)}
+                      min={new Date().toISOString().split("T")[0]}
+                      className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white/60 outline-none focus:border-violet-500/50 transition"
+                    />
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Error */}
@@ -532,16 +366,24 @@ export default function GeneratePage() {
           <button
             onClick={handleGenerate}
             disabled={loading || !question.trim() || (isLoggedIn && isFreePlan && generationsLeft <= 0)}
-            className="w-full bg-violet-600 hover:bg-violet-500 disabled:opacity-40 disabled:cursor-not-allowed py-4 rounded-xl font-semibold transition text-lg"
+            className="w-full bg-violet-600 hover:bg-violet-500 disabled:opacity-40 disabled:cursor-not-allowed py-4 rounded-xl font-semibold transition text-base"
           >
-            {loading ? "Generating..." : "Generate & Download ✨"}
+            {loading ? "Generating..." : "Generate & Download ⚡"}
           </button>
 
           {loading && (
-            <div className="text-center text-white/40 text-sm animate-pulse">
-              AI is working on your assignment. This may take a few seconds...
+            <div className="text-center text-white/30 text-xs animate-pulse">
+              AI is working on your assignment...
             </div>
           )}
+
+          {/* Switch to chat */}
+          <div className="text-center">
+            <p className="text-white/20 text-xs">
+              Want to refine your assignment or ask follow-up questions?{" "}
+              <Link href="/chat" className="text-violet-400 hover:underline">Try Chat Mode →</Link>
+            </p>
+          </div>
 
         </div>
       </div>

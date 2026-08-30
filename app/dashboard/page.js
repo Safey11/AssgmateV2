@@ -59,6 +59,9 @@ export default function DashboardPage() {
           <Link href="/pricing" className="text-sm text-white/60 hover:text-white transition">Pricing</Link>
           <Link href="/referral" className="text-sm text-white/60 hover:text-white transition">Invite Friends 🎁</Link>
           <Link href="/settings" className="text-sm text-white/60 hover:text-white transition">Settings</Link>
+          <Link href="/chat" className="text-sm bg-violet-600 hover:bg-violet-500 px-4 py-2 rounded-lg transition">
+            Chat ✨
+          </Link>
           <button
             onClick={async () => { await signOut({ redirect: false }); window.location.href = "/login"; }}
             className="text-sm bg-white/5 border border-white/10 hover:border-white/30 px-4 py-2 rounded-lg transition"
@@ -151,15 +154,13 @@ export default function DashboardPage() {
             { label: "Friends Invited", value: loading ? "..." : stats.referralCount || 0, icon: "👥" },
             { label: "Plan", value: loading ? "..." : stats.plan.charAt(0).toUpperCase() + stats.plan.slice(1), icon: "⚡" },
           ].map((stat) => (
-            <div key={stat.label} className={`bg-white/5 border rounded-2xl p-4 md:p-6 ${
-              stat.label === "Plan" && stats.plan === "pro"
+            <div key={stat.label} className={`bg-white/5 border rounded-2xl p-4 md:p-6 ${stat.label === "Plan" && stats.plan === "pro"
                 ? "border-violet-500/40 bg-violet-600/10"
                 : "border-white/10"
-            }`}>
+              }`}>
               <span className="text-xl md:text-2xl">{stat.icon}</span>
-              <p className={`text-xl md:text-3xl font-bold mt-2 md:mt-3 ${
-                stat.label === "Plan" && stats.plan === "pro" ? "text-violet-400" : ""
-              }`}>{stat.value}</p>
+              <p className={`text-xl md:text-3xl font-bold mt-2 md:mt-3 ${stat.label === "Plan" && stats.plan === "pro" ? "text-violet-400" : ""
+                }`}>{stat.value}</p>
               <p className="text-white/40 text-xs md:text-sm mt-1">{stat.label}</p>
             </div>
           ))}
