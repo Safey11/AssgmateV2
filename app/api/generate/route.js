@@ -22,19 +22,19 @@ const FREE_LIMIT = 5;
 const ANONYMOUS_LIMIT = 1;
 
 const wordCountMap = {
-  short: "300-500 words",
-  medium: "500-800 words",
-  long: "800-1200 words",
-  detailed: "1200+ words",
+  quick: "150-300 words — short and direct answers only",
+  standard: "500-800 words — well structured with examples",
+  detailed: "1000-1500 words — comprehensive with diagrams and code",
+  research: "2000-2500 words — in-depth research paper style",
 };
 
 const subjectContext = {
   general: "",
-  cs: "This is a Computer Science/IT assignment. Use technical terminology, include code examples where relevant, explain algorithms and data structures clearly.",
-  business: "This is a Business/Management assignment. Use business terminology, include real world examples, reference management theories and frameworks.",
-  english: "This is an English/Literature assignment. Focus on language, grammar, literary devices, writing style and critical analysis.",
-  islamic: "This is an Islamic Studies assignment. Reference Quran verses, Hadith and Islamic scholars where appropriate. Be respectful and accurate.",
-  science: "This is a Science assignment. Include scientific facts, experiments, formulas in text form and proper scientific terminology.",
+  cs: "This is a Computer Science/IT assignment. Use technical terminology, include code examples and diagrams where relevant.",
+  business: "This is a Business/Management assignment. Use business terminology, include real world examples and frameworks.",
+  english: "This is an English/Literature assignment. Focus on language, grammar, literary devices and critical analysis.",
+  islamic: "This is an Islamic Studies assignment. Reference Quran, Hadith and Islamic scholars where appropriate.",
+  science: "This is a Science assignment. Include scientific facts, experiments and proper scientific terminology.",
 };
 
 export async function POST(req) {
@@ -49,7 +49,6 @@ export async function POST(req) {
     await connectDB();
     const cookieStore = await cookies();
 
-    // Handle anonymous users (not logged in)
     if (!session?.user?.email) {
       const anonUsed = cookieStore.get("anon_generations")?.value || "0";
       if (parseInt(anonUsed) >= ANONYMOUS_LIMIT) {
@@ -59,7 +58,6 @@ export async function POST(req) {
         );
       }
     } else {
-      // Logged in user - check plan limit (including bonus generations from referrals)
       const user = await User.findOne({ email: session.user.email });
       const totalAllowed = FREE_LIMIT + (user?.bonusGenerations || 0);
       if (user && user.plan === "free" && user.generationsUsed >= totalAllowed) {
@@ -70,64 +68,33 @@ export async function POST(req) {
       }
     }
 
-    const prompt = `You are an expert academic assistant. Complete the following assignment thoroughly and professionally.
+    const prompt = `You are an expert academic assistant for Pakistani university students.
 
 Assignment: ${question}
 
 ${studentDetails?.name ? `Student: ${studentDetails.name}` : ""}
 ${studentDetails?.courseName ? `Course: ${studentDetails.courseName}` : ""}
-
 ${subjectContext[subject] || ""}
 
-Follow these formatting rules:
-- ${language === "urdu" ? "Write the ENTIRE response in Urdu language using Urdu script" : "Write in clear professional English"}
-- Use # for main headings and ## for subheadings and ### for sub-subheadings
-- Write approximately ${wordCountMap[wordCount] || "500-800 words"}
-- Write detailed, accurate and well-structured responses
-- Include relevant examples and explanations
-- For ANY diagram, flowchart, UML, ER diagram, or visual representation use Mermaid diagram syntax wrapped in \`\`\`mermaid code blocks. Examples:
+STRICT RULES:
+- Write EXACTLY ${wordCountMap[wordCount] || wordCountMap.standard}
+- ${language === "urdu" ? "Write the ENTIRE response in Urdu script" : "Write in clear professional English"}
+- Start DIRECTLY with the content — no preamble like "Here is your assignment"
+- Use # for main headings, ## for subheadings, ### for sub-headings
+- For diagrams use Mermaid syntax in \`\`\`mermaid blocks
+- For code always include brief comments
+- Make every sentence count — no filler or repetition
+${citationStyle && citationStyle !== "none" ? `- End with ## References section in ${citationStyle} format with 3+ real citations` : "- Do NOT add references"}`;
 
-  Flowchart:
-  \`\`\`mermaid
-  flowchart TD
-    A[Start] --> B{Decision}
-    B -->|Yes| C[Process]
-    B -->|No| D[End]
-    C --> D
-  \`\`\`
+    const rawContent = await generateContent(prompt);
 
-  Sequence Diagram:
-  \`\`\`mermaid
-  sequenceDiagram
-    Client->>Server: Request
-    Server-->>Client: Response
-  \`\`\`
-
-  Class Diagram:
-  \`\`\`mermaid
-  classDiagram
-    class Animal {
-      +String name
-      +makeSound()
-    }
-    class Dog {
-      +fetch()
-    }
-    Animal <|-- Dog
-  \`\`\`
-
-  ER Diagram:
-  \`\`\`mermaid
-  erDiagram
-    STUDENT ||--o{ ENROLLMENT : has
-    COURSE ||--o{ ENROLLMENT : has
-  \`\`\`
-
-- For code always include comments explaining each step
-- Make the response comprehensive enough to score full marks
-${citationStyle && citationStyle !== "none" ? `- At the end always add a ## References section with at least 3 proper ${citationStyle} format citations` : ""}`;
-
-    const content = await generateContent(prompt);
+    // Clean AI preamble
+    const content = rawContent
+      .replace(/<think>[\s\S]*?<\/think>/g, "")
+      .replace(/\[Proceeds\]/g, "")
+      .replace(/^(Hello!|Hi!|Sure!|Of course!|Here's|Here is|Let me|I'll|Great!|Certainly!|I can)[^\n]*/gm, "")
+      .replace(/^(Let me know|Feel free|Hope this|If you need|I hope)[^\n]*/gm, "")
+      .trim();
 
     let buffer;
     const fileTitle = title || "Assignment";
@@ -157,7 +124,6 @@ ${citationStyle && citationStyle !== "none" ? `- At the end always add a ## Refe
         });
 
         const streakData = calculateStreak(user);
-
         await User.findByIdAndUpdate(user._id, {
           $inc: { generationsUsed: 1 },
           $set: {

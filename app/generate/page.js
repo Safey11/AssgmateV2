@@ -34,6 +34,7 @@ export default function GeneratePage() {
   const [dueDate, setDueDate] = useState("");
   const fileRef = useRef(null);
   const imageRef = useRef(null);
+  const [wordCount, setWordCount] = useState("standard");
 
   useEffect(() => {
     fetch("/api/auth/session")
@@ -279,10 +280,38 @@ export default function GeneratePage() {
             />
           </div>
 
+
+          {/* Word Count */}
+<div>
+  <label className="text-sm text-white/50 mb-1.5 block">Length</label>
+  <div className="grid grid-cols-4 gap-2">
+    {[
+      { id: "quick", label: "Quick", words: "150-300w" },
+      { id: "standard", label: "Standard", words: "500-800w" },
+      { id: "detailed", label: "Detailed", words: "1000-1500w" },
+      { id: "research", label: "Research", words: "2000+w" },
+    ].map((w) => (
+      <button
+        key={w.id}
+        onClick={() => setWordCount(w.id)}
+        className={`flex flex-col items-center gap-1 p-3 rounded-xl border transition ${
+          wordCount === w.id
+            ? "border-violet-500 bg-violet-500/10 text-white"
+            : "border-white/10 bg-white/5 text-white/40 hover:border-white/20 hover:text-white"
+        }`}
+      >
+        <span className="text-xs font-medium">{w.label}</span>
+        <span className="text-xs text-white/20">{w.words}</span>
+      </button>
+    ))}
+  </div>
+</div>
+
           {/* Format */}
           <div>
             <label className="text-sm text-white/50 mb-1.5 block">Output Format</label>
             <div className="grid grid-cols-4 gap-2">
+              
               {FORMATS.map((f) => (
                 <button
                   key={f.id}
